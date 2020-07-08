@@ -15,5 +15,30 @@ apply plugin: 'java'
 apply plugin: 'war'
 apply plugin: 'com.google.cloud.tools.appengine'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+ext.versions = [
+        servlet : [
+                api: '4.0.1'
+        ],
+        google  : [
+                datastore: '1.104.0'
+        ],
+        spring  : [
+                boot: '2.3.1.RELEASE'
+        ]
+]
+
+dependencies {
+    implementation group: 'javax.servlet', name: 'javax.servlet-api',  version: versions.servlet.api
+    implementation group: 'com.google.cloud', name: 'google-cloud-datastore', version: versions.google.datastore
+    implementation group: 'org.springframework.boot', name: 'spring-boot-dependencies', version: versions.spring.boot
+    implementation(group: 'org.springframework.boot', name: 'spring-boot-starter-web-services', version: versions.spring.boot) {
+        exclude module: 'spring-boot-starter-tomcat'
+    }
+
+    testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: versions.spring.boot
+}
+
+test{
+    outputs.upToDateWhen {false}
+    useJUnitPlatform()
+}
