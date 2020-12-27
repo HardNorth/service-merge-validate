@@ -31,12 +31,12 @@ public class MergeValidateController {
 
 	@PostMapping("integration")
 	public ResponseEntity<Void> createIntegration(@RequestBody String repositoryUrl) {
-		return null; // redirect URL
+		return null; // return URL
 	}
 
 	@GetMapping("return")
-	public ResponseEntity<Void> integrationResult() {
-		return null; // return UUID
+	public ResponseEntity<Void> integrationResult(@RequestParam String code) {
+		return null; // Repo UUID
 	}
 
 	@PutMapping("merge/{uuid}/{from}/{to}")
