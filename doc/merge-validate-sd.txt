@@ -7,6 +7,9 @@ GitHub->Service: Authorize
 Service->GitHub: Authenticate
 GitHub->Service: Token
 Service->Service: Save token:[repo_url: token]
+GitHub->User: Return URL
+User->Service: Return URL
+Service->User: Auth UUID
 ==Merge flow==
 User->Service: merge(repo url, branch from, branch to)
 Service->GitHub: get diff 'to' from 'from'
