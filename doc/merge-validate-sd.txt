@@ -5,13 +5,18 @@ Service->User: Authorization URL
 User->GitHub: Authorize (Authorization URL)
 GitHub->Service: Authorize
 Service->GitHub: Authenticate
+GitHub->Service: Token
+Service->Service: Save token:[repo_url: token]
 ==Merge flow==
-User->Service: merge(branch from, branch to)
+User->Service: merge(repo url, branch from, branch to)
 Service->GitHub: get diff 'to' from 'from'
 Service->GitHub: get '.merge-validate' file in 'from' branch
 Service->Service: verify by diff and  '.merge-validate'
 alt Diff verified
 Service->GitHub: merge
+Service->User: 204
 else Diff declined
 Service->User: 403
+else Merge conflicts
+Service->User: 409
 end
