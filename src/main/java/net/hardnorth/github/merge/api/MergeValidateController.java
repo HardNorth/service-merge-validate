@@ -30,17 +30,17 @@ public class MergeValidateController {
 	}
 
 	@PostMapping("integration")
-	public void createIntegration(@RequestBody String repositoryUrl) {
-
+	public ResponseEntity<Void> createIntegration(@RequestBody String repositoryUrl) {
+		return null; // redirect URL
 	}
 
-	@DeleteMapping("integration")
-	public void deleteIntegration(@RequestBody String repositoryUrl) {
-
+	@GetMapping("return")
+	public ResponseEntity<Void> integrationResult() {
+		return null; // return UUID
 	}
 
-	@PutMapping("merge/{from}/{to}")
-	public void merge(@PathVariable String from, @PathVariable String to) {
+	@PutMapping("merge/{uuid}/{from}/{to}")
+	public void merge(@PathVariable String uuid, @PathVariable String from, @PathVariable String to) {
 
 	}
 
