@@ -10,7 +10,7 @@ public class AuthorizationService {
 		datastore = datastoreService;
 	}
 
-	public String getRepository(String authUuid) {
+	public String getToken(String authUuid) {
 		return null;
 	}
 }

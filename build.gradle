@@ -20,23 +20,31 @@ ext.versions = [
                 api: '4.0.1'
         ],
         google : [
+                jsr305   : '3.0.2',
                 objectify: '6.0.6',
                 datastore: '1.105.3'
         ],
         spring : [
                 boot: '2.3.1.RELEASE'
+        ],
+        apache : [
+                commonsLang3: '3.11'
         ]
 ]
 
 dependencies {
-    implementation "javax.servlet:javax.servlet-api:${versions.servlet.api}"
-    implementation "com.googlecode.objectify:objectify:${versions.google.objectify}"
-    implementation "org.springframework.boot:spring-boot-dependencies:${versions.spring.boot}"
-    implementation("org.springframework.boot:spring-boot-starter-web-services:${versions.spring.boot}") {
+    compile "com.google.code.findbugs:jsr305:${versions.google.jsr305}"
+    compile "javax.servlet:javax.servlet-api:${versions.servlet.api}"
+    compile "javax.servlet:javax.servlet-api:${versions.servlet.api}"
+    compile "com.googlecode.objectify:objectify:${versions.google.objectify}"
+    compile "org.springframework.boot:spring-boot-dependencies:${versions.spring.boot}"
+    compile("org.springframework.boot:spring-boot-starter-web-services:${versions.spring.boot}") {
         exclude module: 'spring-boot-starter-tomcat'
     }
-    implementation "com.google.cloud:google-cloud-datastore:${versions.google.datastore}"
-    testImplementation "org.springframework.boot:spring-boot-starter-test:${versions.spring.boot}"
+    compile "com.google.cloud:google-cloud-datastore:${versions.google.datastore}"
+    compile "org.apache.commons:commons-lang3:${versions.apache.commonsLang3}"
+
+    testCompile "org.springframework.boot:spring-boot-starter-test:${versions.spring.boot}"
 }
 
 test {

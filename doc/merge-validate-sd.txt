@@ -1,21 +1,24 @@
 title Merge-Validate Service
 ==Authorization flow==
-User->Service:createIntegration(repositoryUrl)
-Service->User: Authorization URL
+User->Service: Create Integration
+Service->User: 302: Authorization URL
 User->GitHub: Authorize (Authorization URL)
 GitHub->User: Return URL (with code)
 User->Service: GET Return URL
 Service->GitHub: Authenticate (by code)
 alt Authentication success
-GitHub->Service: Token
-Service->Service: Save:[UUID, repo_url, token]
+GitHub->Service: GitHub Token
+Service->Service: Save:[UUID, token]
 Service->User: 201 (with UUID)
 else Authentication failed
 Service->User: 401
 end
 ==Merge flow==
-User->Service: merge(UUID, branch from, branch to)
-Service->Service:Get repo URL by UUID
+User->Service: merge(UUID, repo, branch from, branch to)
+Service->Service:Get GitHub Token by UUID
+opt GitHub Token not found
+Service->User: 401
+end
 Service->GitHub: get diff 'to' from 'from'
 Service->GitHub: get '.merge-validate' file in 'to' branch
 Service->Service: verify by diff and  '.merge-validate'
@@ -27,3 +30,4 @@ Service->User: 403
 else Merge conflicts
 Service->User: 409
 end
+else GitHub Token not found
