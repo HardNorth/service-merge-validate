@@ -3,11 +3,11 @@ name: CI Build
 on:
   push:
     branches:
-      - '*'
-      - '!master'
-  pull_request:
-    branches:
-      - master
+    - '*'
+    - '!master'
+    paths-ignore:
+    - README.md
+    - CHANGELOG.md
 
 jobs:
   build:
