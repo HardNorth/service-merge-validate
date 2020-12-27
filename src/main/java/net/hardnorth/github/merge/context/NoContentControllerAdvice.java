@@ -16,25 +16,21 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 @ControllerAdvice
-public class NoContentControllerAdvice implements ResponseBodyAdvice<Void>
-{
+public class NoContentControllerAdvice implements ResponseBodyAdvice<Void> {
 
-    @Override
-    public boolean supports(@NonNull MethodParameter returnType, @Nullable Class<? extends HttpMessageConverter<?>> converterType)
-    {
-        return returnType.getParameterType().isAssignableFrom(void.class);
+	@Override
+	public boolean supports(@NonNull MethodParameter returnType, @Nullable Class<? extends HttpMessageConverter<?>> converterType) {
+		return returnType.getParameterType().isAssignableFrom(void.class);
 
-    }
+	}
 
-    @Override
-    public Void beforeBodyWrite(Void body, @NonNull MethodParameter returnType, @Nullable MediaType mediaType,
-                                @Nullable Class<? extends HttpMessageConverter<?>> converterType,
-                                @Nullable ServerHttpRequest request, @NonNull ServerHttpResponse response)
-    {
-        if (returnType.getParameterType().isAssignableFrom(void.class))
-        {
-            response.setStatusCode(HttpStatus.NO_CONTENT);
-        }
-        return body;
-    }
+	@Override
+	public Void beforeBodyWrite(Void body, @NonNull MethodParameter returnType, @Nullable MediaType mediaType,
+			@Nullable Class<? extends HttpMessageConverter<?>> converterType, @Nullable ServerHttpRequest request,
+			@NonNull ServerHttpResponse response) {
+		if (returnType.getParameterType().isAssignableFrom(void.class)) {
+			response.setStatusCode(HttpStatus.NO_CONTENT);
+		}
+		return body;
+	}
 }

@@ -16,29 +16,30 @@ apply plugin: 'war'
 apply plugin: 'com.google.cloud.tools.appengine'
 
 ext.versions = [
-        servlet : [
+        servlet: [
                 api: '4.0.1'
         ],
-        google  : [
-                objectify: '6.0.6'
+        google : [
+                objectify: '6.0.6',
+                datastore: '1.105.3'
         ],
-        spring  : [
+        spring : [
                 boot: '2.3.1.RELEASE'
         ]
 ]
 
 dependencies {
-    implementation group: 'javax.servlet', name: 'javax.servlet-api',  version: versions.servlet.api
-    implementation group: 'com.googlecode.objectify', name: 'objectify', version: versions.google.objectify
-    implementation group: 'org.springframework.boot', name: 'spring-boot-dependencies', version: versions.spring.boot
-    implementation(group: 'org.springframework.boot', name: 'spring-boot-starter-web-services', version: versions.spring.boot) {
+    implementation "javax.servlet:javax.servlet-api:${versions.servlet.api}"
+    implementation "com.googlecode.objectify:objectify:${versions.google.objectify}"
+    implementation "org.springframework.boot:spring-boot-dependencies:${versions.spring.boot}"
+    implementation("org.springframework.boot:spring-boot-starter-web-services:${versions.spring.boot}") {
         exclude module: 'spring-boot-starter-tomcat'
     }
-
-    testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: versions.spring.boot
+    implementation "com.google.cloud:google-cloud-datastore:${versions.google.datastore}"
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${versions.spring.boot}"
 }
 
-test{
-    outputs.upToDateWhen {false}
+test {
+    outputs.upToDateWhen { false }
     useJUnitPlatform()
 }
