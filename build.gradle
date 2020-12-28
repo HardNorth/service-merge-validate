@@ -56,4 +56,6 @@ dependencies {
 
 test {
     outputs.upToDateWhen { false }
+    // not required, but definitely useful
+    testLogging.showStandardStreams = true
 }
