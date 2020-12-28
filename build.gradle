@@ -57,5 +57,4 @@ dependencies {
 test {
     outputs.upToDateWhen { false }
     setEnvironment(["GOOGLE_CLOUD_PROJECT": "test"])
-    // not required, but definitely useful
 }
