@@ -1,31 +1,15 @@
 package net.hardnorth.github.merge;
 
-import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
-import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
 public class MergeValidateApplicationTests {
-	private static final LocalServiceTestHelper helper = new LocalServiceTestHelper(new LocalDatastoreServiceTestConfig());
-
-	@BeforeClass
-	public static void setUp() {
-		helper.setUp();
-	}
-
-	@AfterClass
-	public static void tearDown() {
-		helper.tearDown();
-	}
-
 	@Test
 	public void contextLoads() {
+		// just an empty test to verify Spring Context loading
 	}
-
 }

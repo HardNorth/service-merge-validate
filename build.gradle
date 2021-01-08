@@ -15,6 +15,9 @@ apply plugin: 'java'
 apply plugin: 'war'
 apply plugin: 'com.google.cloud.tools.appengine'
 
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
 ext.versions = [
         servlet: [
                 api: '4.0.1'
@@ -27,7 +30,7 @@ ext.versions = [
                 datastore: '1.105.3'
         ],
         spring : [
-                boot: '2.3.1.RELEASE'
+                boot: '2.3.6.RELEASE'
         ],
         apache : [
                 commonsLang3: '3.11'
@@ -37,7 +40,6 @@ ext.versions = [
 dependencies {
     compile "com.google.code.findbugs:jsr305:${versions.google.jsr305}"
     compile "javax.servlet:javax.servlet-api:${versions.servlet.api}"
-    compile "javax.servlet:javax.servlet-api:${versions.servlet.api}"
     compile "com.googlecode.objectify:objectify:${versions.google.objectify}"
     compile "org.springframework.boot:spring-boot-dependencies:${versions.spring.boot}"
     compile("org.springframework.boot:spring-boot-starter-web-services:${versions.spring.boot}") {
@@ -46,7 +48,9 @@ dependencies {
     compile "com.google.cloud:google-cloud-datastore:${versions.google.datastore}"
     compile "org.apache.commons:commons-lang3:${versions.apache.commonsLang3}"
 
-    testCompile "org.springframework.boot:spring-boot-starter-test:${versions.spring.boot}"
+    testCompile ("org.springframework.boot:spring-boot-starter-test:${versions.spring.boot}") {
+        exclude module: 'junit-vintage-engine'
+    }
     testCompile "com.google.appengine:appengine-testing:${versions.google.appengineTesting}"
     testCompile "com.google.appengine:appengine-api-stubs:${versions.google.appengineTesting}"
     testCompile "com.google.appengine:appengine-api-1.0-sdk:${versions.google.appengineTesting}"
@@ -56,5 +60,6 @@ dependencies {
 
 test {
     outputs.upToDateWhen { false }
+    useJUnitPlatform()
     setEnvironment(["GOOGLE_CLOUD_PROJECT": "test"])
 }
