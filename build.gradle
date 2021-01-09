@@ -62,4 +62,5 @@ test {
     outputs.upToDateWhen { false }
     useJUnitPlatform()
     setEnvironment(["GOOGLE_CLOUD_PROJECT": "test"])
+    testLogging.exceptionFormat = 'full'
 }

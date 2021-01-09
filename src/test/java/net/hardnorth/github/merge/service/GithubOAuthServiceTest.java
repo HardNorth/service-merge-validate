@@ -1,9 +1,7 @@
 package net.hardnorth.github.merge.service;
 
-import com.google.cloud.Timestamp;
 import com.google.cloud.datastore.*;
 import com.google.cloud.datastore.testing.LocalDatastoreHelper;
-import com.google.common.collect.Iterators;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -87,6 +84,11 @@ public class GithubOAuthServiceTest {
 				.collect(Collectors.toList());
 		assertThat(entities, hasSize(1));
 		Entity entity = entities.get(0);
-		assertThat(entity.getTimestamp("expires").toDate(), greaterThan(Calendar.getInstance().getTime()));
+		Calendar futureCalendar = Calendar.getInstance();
+		futureCalendar.add(Calendar.HOUR, 1);
+		assertThat(
+				entity.getTimestamp("expires").toDate(),
+				allOf(greaterThan(Calendar.getInstance().getTime()), lessThanOrEqualTo(futureCalendar.getTime()))
+		);
 	}
 }
