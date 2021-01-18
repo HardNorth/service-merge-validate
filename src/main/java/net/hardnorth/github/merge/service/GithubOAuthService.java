@@ -35,7 +35,7 @@ public class GithubOAuthService {
 		clientId = githubApplicationClientId;
 	}
 
-	public String getOauthToken(String authUuid) {
+	public String authenticate(String authUuid) {
 		return null;
 	}
 
@@ -62,6 +62,10 @@ public class GithubOAuthService {
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(e.getMessage(), e);
 		}
+	}
+
+	public void authorize(String authUuid, String code, String state) {
+
 	}
 
 	public void setGithubOAuthUrl(String githubOAuthUrl) {

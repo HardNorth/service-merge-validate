@@ -3,17 +3,13 @@ package net.hardnorth.github.merge.utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.MimeTypeUtils;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.ServletWebRequest;
-import org.springframework.web.context.request.WebRequest;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpStatus;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Date;
@@ -27,37 +23,30 @@ public class WebServiceCommon
     private static final Gson GSON = new Gson().newBuilder().serializeNulls().setDateFormat(DATE_FORMAT).create();
 
     /**
-     * Reads {@link RestController} annotation from {@code controller} and generate standard Health Check response
-     * based on the annotation value (component name) and constant 'OK' literal.
+     * Reads simple class name from {@code controller} and generate standard Health Check response based on the component name and constant
+     * 'OK' literal.
      *
      * @param controller a controller object to get component name
      * @return web-service standard response
      */
-    public static ResponseEntity<String> healthCheck(Object controller)
+    public static Response healthCheck(Object controller)
     {
-        HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.set(HttpHeaders.CONTENT_TYPE, MimeTypeUtils.TEXT_PLAIN_VALUE);
-
-        return ResponseEntity.ok()
-                .headers(responseHeaders)
-                .body(controller.getClass().getAnnotation(RestController.class).value() + ": OK");
+        return Response.status(HttpStatus.SC_OK)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
+                .encoding(StandardCharsets.UTF_8.name())
+                .entity(controller.getClass().getSimpleName()+ ": OK").build();
     }
 
-    public static ResponseEntity<Void> performRedirect(String where)
+    public static Response performRedirect(String where)
     {
-        HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.set(HttpHeaders.LOCATION, where);
-
-        return ResponseEntity.status(HttpStatus.FOUND).headers(responseHeaders).build();
+        return Response.status(HttpStatus.SC_MOVED_TEMPORARILY).header(HttpHeaders.LOCATION, where).build();
     }
 
-
-    public static JsonElement getExceptionOutput(String path, HttpStatus status, String error, String message)
+    public static JsonElement getExceptionOutput(String path, int status, String error, String message)
     {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("timestamp", new Date());
-        result.put("status_code", status.value());
-        result.put("status_message", status.getReasonPhrase());
+        result.put("status_code", status);
         result.put("message", message);
         result.put("request_path", path);
         result.put("error", error);
