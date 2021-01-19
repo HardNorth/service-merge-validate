@@ -47,7 +47,7 @@ public class MergeValidateController {
 
     @GET
     @Path("integration/result/{authUuid}")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response integrationResult(@PathParam("authUuid") String authUuid, @QueryParam("state") String state,
                                       @QueryParam("code") String code) {
         return null; // Repo UUID

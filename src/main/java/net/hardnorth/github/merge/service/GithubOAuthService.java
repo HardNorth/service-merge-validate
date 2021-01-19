@@ -28,7 +28,7 @@ public class GithubOAuthService {
     private final String clientId;
     private String githubOAuthUrl = DEFAULT_GITHUB_OAUTH_URL;
 
-    public GithubOAuthService(Datastore datastoreService, String serviceUrl, String applicationName, String githubApplicationClientId) {
+    public GithubOAuthService(Datastore datastoreService, String applicationName, String serviceUrl, String githubApplicationClientId) {
         datastore = datastoreService;
         baseUrl = serviceUrl;
         keyFactory = datastore.newKeyFactory().setKind(applicationName + "-" + AUTH_KIND);

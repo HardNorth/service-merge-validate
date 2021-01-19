@@ -25,6 +25,7 @@ public class GithubOAuthServiceTest {
     public static final String PROJECT_ID = "test";
     public static final int SERVICE_PORT = 8889;
     public static final String SERVICE_URL = "http://localhost:" + SERVICE_PORT;
+    public static final String GITHUB_URL = "https://github.com/login/oauth/authorize";
     public static final String APPLICATION_NAME = "test-application";
     public static final String CLIENT_ID = "test-client-id";
 
@@ -46,14 +47,14 @@ public class GithubOAuthServiceTest {
     @BeforeEach
     public void setUp() {
         datastore = HELPER.getOptions().toBuilder().setProjectId(PROJECT_ID).build().getService();
-        service = new GithubOAuthService(datastore, SERVICE_URL, APPLICATION_NAME, CLIENT_ID);
+        service = new GithubOAuthService(datastore, APPLICATION_NAME, SERVICE_URL, CLIENT_ID);
     }
 
     @Test
     public void verify_createIntegration_url() throws MalformedURLException {
         String urlStr = service.createIntegration();
 
-        assertThat(urlStr, startsWith("https://github.com/login/oauth/authorize"));
+        assertThat(urlStr, startsWith(GITHUB_URL));
 
         URL url = new URL(urlStr);
         Map<String, String> query = Arrays.stream(url.getQuery().split("&"))
