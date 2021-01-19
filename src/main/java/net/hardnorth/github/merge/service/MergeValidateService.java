@@ -4,10 +4,10 @@ import com.google.cloud.datastore.Datastore;
 
 public class MergeValidateService {
 
-	private final Datastore datastore;
+    private final Datastore datastore;
 
-	public MergeValidateService(Datastore datastoreService) {
-		datastore = datastoreService;
-	}
+    public MergeValidateService(Datastore datastoreService) {
+        datastore = datastoreService;
+    }
 
 }

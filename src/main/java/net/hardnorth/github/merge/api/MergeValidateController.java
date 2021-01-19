@@ -1,9 +1,9 @@
 package net.hardnorth.github.merge.api;
 
+import net.hardnorth.github.merge.exception.AuthenticationException;
 import net.hardnorth.github.merge.service.GithubOAuthService;
 import net.hardnorth.github.merge.service.MergeValidateService;
 import net.hardnorth.github.merge.utils.WebServiceCommon;
-import net.hardnorth.github.merge.web.AuthenticationException;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -13,48 +13,55 @@ import static java.util.Optional.ofNullable;
 
 @Path("/")
 public class MergeValidateController {
-	private final GithubOAuthService authService;
-	private final MergeValidateService mergeService;
+    private final GithubOAuthService authService;
+    private final MergeValidateService mergeService;
 
-	public MergeValidateController(GithubOAuthService authorizationService, MergeValidateService mergeValidateService) {
-		authService = authorizationService;
-		mergeService = mergeValidateService;
-	}
+    public MergeValidateController(GithubOAuthService authorizationService, MergeValidateService mergeValidateService) {
+        authService = authorizationService;
+        mergeService = mergeValidateService;
+    }
 
-	@GET
-	@Path("healthcheck")
-	public Response healthCheck() {
-		return WebServiceCommon.healthCheck(this);
-	}
+    @GET
+    @Path("healthcheck")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response healthCheck() {
+        return WebServiceCommon.healthCheck(this);
+    }
 
-	@POST
-	@Path("ping")
-	public void ping(String body) {
-		System.out.println(body);
-	}
+    @POST
+    @Path("ping")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response ping(String body) {
+        return Response.status(200).entity(body).build();
+    }
 
-	@POST
-	@Path("integration")
-	public Response createIntegration() {
-		// see: https://docs.github.com/en/free-pro-team@latest/developers/apps/authorizing-oauth-apps
-		return WebServiceCommon.performRedirect(authService.createIntegration()); // return redirect URL in headers, authUuid
-	}
+    @POST
+    @Path("integration")
+    @Consumes
+    @Produces
+    public Response createIntegration() {
+        // see: https://docs.github.com/en/free-pro-team@latest/developers/apps/authorizing-oauth-apps
+        return WebServiceCommon.performRedirect(authService.createIntegration()); // return redirect URL in headers, authUuid
+    }
 
-	@GET
-	@Path("integration/result/{authUuid}")
-	public Response integrationResult(@PathParam("authUuid") String authUuid, @QueryParam("state") String state,
-			@QueryParam("code") String code) {
-		return null; // Repo UUID
-	}
+    @GET
+    @Path("integration/result/{authUuid}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response integrationResult(@PathParam("authUuid") String authUuid, @QueryParam("state") String state,
+                                      @QueryParam("code") String code) {
+        return null; // Repo UUID
+    }
 
-	@PUT
-	@Path("merge")
-	public void merge(@HeaderParam(value = "Authorization") String auth, @QueryParam("repoUrl") String repoUrl,
-			@QueryParam("from") String from, @QueryParam("to") String to) {
-		String authToken = ofNullable(WebServiceCommon.getAuthToken(auth)).orElseThrow(() -> new IllegalArgumentException(
-				"Unable to extract Authentication Token from header"));
-		String githubToken = ofNullable(authService.authenticate(authToken)).orElseThrow(AuthenticationException::new);
+    @PUT
+    @Path("merge")
+    @Consumes
+    @Produces
+    public void merge(@HeaderParam(value = "Authorization") String auth, @QueryParam("repoUrl") String repoUrl,
+                      @QueryParam("from") String from, @QueryParam("to") String to) {
+        String authToken = ofNullable(WebServiceCommon.getAuthToken(auth)).orElseThrow(() -> new IllegalArgumentException(
+                "Unable to extract Authentication Token from header"));
+        String githubToken = ofNullable(authService.authenticate(authToken)).orElseThrow(AuthenticationException::new);
 
-	}
-
+    }
 }
