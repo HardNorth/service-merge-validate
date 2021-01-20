@@ -89,11 +89,6 @@
       <version>2.2</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-common-deployment</artifactId>
-      <version>${quarkus-plugin.version}</version>
-    </dependency>
   </dependencies>
   <build>
     <plugins>
