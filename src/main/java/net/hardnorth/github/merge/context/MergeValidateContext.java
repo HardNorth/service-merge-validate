@@ -3,6 +3,7 @@ package net.hardnorth.github.merge.context;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import net.hardnorth.github.merge.service.GithubOAuthService;
+import net.hardnorth.github.merge.service.MergeValidateService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -31,8 +32,9 @@ public class MergeValidateContext {
         return service;
     }
 
-//	@Bean
-//	public MergeValidateService mergeValidateService(@Autowired Datastore datastore) {
-//		return new MergeValidateService(datastore);
-//	}
+    @Produces
+    @ApplicationScoped
+	public MergeValidateService mergeValidateService(Datastore datastore) {
+		return new MergeValidateService(datastore);
+	}
 }

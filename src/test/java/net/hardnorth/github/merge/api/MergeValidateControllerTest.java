@@ -8,7 +8,9 @@ import static org.hamcrest.Matchers.is;
 
 @QuarkusTest
 public class MergeValidateControllerTest {
+
     @Test
+    // just to test the context is running
     public void testPingEndpoint() {
         given()
                 .when().body("hello").post("/ping")
