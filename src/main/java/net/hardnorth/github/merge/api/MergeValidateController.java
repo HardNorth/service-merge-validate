@@ -29,14 +29,6 @@ public class MergeValidateController {
     }
 
     @POST
-    @Path("ping")
-    @Consumes(MediaType.TEXT_PLAIN)
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response ping(String body) {
-        return Response.status(200).entity(body).build();
-    }
-
-    @POST
     @Path("integration")
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.WILDCARD)

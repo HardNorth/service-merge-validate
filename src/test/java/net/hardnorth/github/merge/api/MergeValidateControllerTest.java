@@ -13,9 +13,9 @@ public class MergeValidateControllerTest {
     // just to test the context is running
     public void testPingEndpoint() {
         given()
-                .when().body("hello").post("/ping")
+                .when().get("/healthcheck")
                 .then()
                 .statusCode(200)
-                .body(is("hello"));
+                .body(is(MergeValidateController.class.getSimpleName()+ ": OK"));
     }
 }
