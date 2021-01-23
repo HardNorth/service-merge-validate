@@ -2,7 +2,7 @@ package net.hardnorth.github.merge.context;
 
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
-import net.hardnorth.github.merge.config.Properties;
+import net.hardnorth.github.merge.config.PropertyNames;
 import net.hardnorth.github.merge.service.GithubOAuthService;
 import net.hardnorth.github.merge.service.MergeValidateService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -22,11 +22,12 @@ public class MergeValidateContext {
     @Produces
     @ApplicationScoped
     public GithubOAuthService authorizationService(Datastore datastore,
-                                                   @ConfigProperty(name = "net.hardnorth.application.name") String applicationName,
-                                                   @ConfigProperty(name = Properties.APPLICATION_URL) String serviceUrl,
-                                                   @ConfigProperty(name = "net.hardnorth.github.oauth.url") String githubOAuthUrl,
-                                                   @ConfigProperty(name = "net.hardnorth.github.oauth.client.id") String clientId) {
-        GithubOAuthService service = new GithubOAuthService(datastore, applicationName, serviceUrl, clientId);
+                                                   @ConfigProperty(name = PropertyNames.APPLICATION_NAME) String applicationName,
+                                                   @ConfigProperty(name = PropertyNames.APPLICATION_URL) String serviceUrl,
+                                                   @ConfigProperty(name = PropertyNames.GITHUB_URL) String githubOAuthUrl,
+                                                   @ConfigProperty(name = PropertyNames.GITHUB_CLIENT_ID) String clientId,
+                                                   @ConfigProperty(name = PropertyNames.GITHUB_CLIENT_SECRET) String clientSecret) {
+        GithubOAuthService service = new GithubOAuthService(datastore, applicationName, serviceUrl, clientId, clientSecret);
         if (isNotBlank(githubOAuthUrl)) {
             service.setGithubOAuthUrl(githubOAuthUrl);
         }

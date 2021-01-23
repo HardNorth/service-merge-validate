@@ -1,7 +1,7 @@
 package net.hardnorth.github.merge.api;
 
 import io.quarkus.test.junit.QuarkusTest;
-import net.hardnorth.github.merge.config.Properties;
+import net.hardnorth.github.merge.config.PropertyNames;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
@@ -11,7 +11,9 @@ import static org.hamcrest.Matchers.is;
 public class MergeValidateControllerTest {
 
     static {
-        System.setProperty(Properties.APPLICATION_URL, "https://merge.hardnorth.net");
+        System.setProperty(PropertyNames.APPLICATION_URL, "https://merge.hardnorth.net");
+        System.setProperty(PropertyNames.GITHUB_CLIENT_ID, "test_client_id");
+        System.setProperty(PropertyNames.GITHUB_CLIENT_SECRET, "test_client_token");
     }
 
     @Test

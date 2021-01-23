@@ -28,6 +28,7 @@ public class GithubOAuthServiceTest {
     public static final String GITHUB_URL = "https://github.com/login/oauth/authorize";
     public static final String APPLICATION_NAME = "test-application";
     public static final String CLIENT_ID = "test-client-id";
+    public static final String CLIENT_SECRET = "test-client-secret";
 
     private static final LocalDatastoreHelper HELPER = LocalDatastoreHelper.create(1.0);
 
@@ -47,7 +48,7 @@ public class GithubOAuthServiceTest {
     @BeforeEach
     public void setUp() {
         datastore = HELPER.getOptions().toBuilder().setProjectId(PROJECT_ID).build().getService();
-        service = new GithubOAuthService(datastore, APPLICATION_NAME, SERVICE_URL, CLIENT_ID);
+        service = new GithubOAuthService(datastore, APPLICATION_NAME, SERVICE_URL, CLIENT_ID, CLIENT_SECRET);
     }
 
     @Test

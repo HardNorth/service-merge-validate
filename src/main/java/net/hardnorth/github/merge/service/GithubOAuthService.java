@@ -26,13 +26,18 @@ public class GithubOAuthService {
     private final KeyFactory keyFactory;
     private final String baseUrl;
     private final String clientId;
+    private final String clientSecret;
     private String githubOAuthUrl = DEFAULT_GITHUB_OAUTH_URL;
 
-    public GithubOAuthService(Datastore datastoreService, String applicationName, String serviceUrl, String githubApplicationClientId) {
+
+    @SuppressWarnings("CdiInjectionPointsInspection")
+    public GithubOAuthService(Datastore datastoreService, String applicationName, String serviceUrl,
+                              String githubApplicationClientId, String githubApplicationClientSecret) {
         datastore = datastoreService;
         baseUrl = serviceUrl;
         keyFactory = datastore.newKeyFactory().setKind(applicationName + "-" + AUTH_KIND);
         clientId = githubApplicationClientId;
+        clientSecret = githubApplicationClientSecret;
     }
 
     public String authenticate(String authUuid) {
