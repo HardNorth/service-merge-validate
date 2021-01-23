@@ -2,6 +2,7 @@ package net.hardnorth.github.merge.context;
 
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
+import net.hardnorth.github.merge.config.Properties;
 import net.hardnorth.github.merge.service.GithubOAuthService;
 import net.hardnorth.github.merge.service.MergeValidateService;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -22,7 +23,7 @@ public class MergeValidateContext {
     @ApplicationScoped
     public GithubOAuthService authorizationService(Datastore datastore,
                                                    @ConfigProperty(name = "net.hardnorth.application.name") String applicationName,
-                                                   @ConfigProperty(name = "net.hardnorth.github.merge.url") String serviceUrl,
+                                                   @ConfigProperty(name = Properties.APPLICATION_URL) String serviceUrl,
                                                    @ConfigProperty(name = "net.hardnorth.github.oauth.url") String githubOAuthUrl,
                                                    @ConfigProperty(name = "net.hardnorth.github.oauth.client.id") String clientId) {
         GithubOAuthService service = new GithubOAuthService(datastore, applicationName, serviceUrl, clientId);
