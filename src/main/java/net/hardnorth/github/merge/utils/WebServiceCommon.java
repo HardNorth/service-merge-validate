@@ -10,12 +10,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class WebServiceCommon {
     public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSX";

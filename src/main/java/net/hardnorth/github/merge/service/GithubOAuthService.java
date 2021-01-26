@@ -5,6 +5,7 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.KeyFactory;
+import net.hardnorth.github.merge.utils.WebClientCommon;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 
@@ -23,6 +24,7 @@ public class GithubOAuthService {
     private static final String STATE = "state";
 
     private final Datastore datastore;
+    private final GithubClientApi github;
     private final KeyFactory keyFactory;
     private final String baseUrl;
     private final String clientId;
@@ -31,9 +33,10 @@ public class GithubOAuthService {
 
 
     @SuppressWarnings("CdiInjectionPointsInspection")
-    public GithubOAuthService(Datastore datastoreService, String applicationName, String serviceUrl,
+    public GithubOAuthService(Datastore datastoreService, GithubClientApi githubApi, String applicationName, String serviceUrl,
                               String githubApplicationClientId, String githubApplicationClientSecret) {
         datastore = datastoreService;
+        github = githubApi;
         baseUrl = serviceUrl;
         keyFactory = datastore.newKeyFactory().setKind(applicationName + "-" + AUTH_KIND);
         clientId = githubApplicationClientId;
@@ -70,7 +73,7 @@ public class GithubOAuthService {
     }
 
     public void authorize(String authUuid, String code, String state) {
-
+        WebClientCommon.executeServiceCall(github.loginApplication(clientId, clientSecret, code, state, null));
     }
 
     public void setGithubOAuthUrl(String githubOAuthUrl) {

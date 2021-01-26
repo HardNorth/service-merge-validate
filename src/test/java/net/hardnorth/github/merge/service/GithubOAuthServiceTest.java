@@ -16,6 +16,7 @@ import java.util.stream.StreamSupport;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.mock;
 
 public class GithubOAuthServiceTest {
     public static final String PROJECT_ID = "test";
@@ -26,13 +27,15 @@ public class GithubOAuthServiceTest {
     public static final String CLIENT_ID = "test-client-id";
     public static final String CLIENT_SECRET = "test-client-secret";
 
+    private final GithubClientApi github = mock(GithubClientApi.class);
+
     private Datastore datastore;
     private GithubOAuthService service;
 
     @BeforeEach
     public void setUp() {
         datastore = DataStoreExtension.getDataStore(PROJECT_ID);
-        service = new GithubOAuthService(datastore, APPLICATION_NAME, SERVICE_URL, CLIENT_ID, CLIENT_SECRET);
+        service = new GithubOAuthService(datastore, github, APPLICATION_NAME, SERVICE_URL, CLIENT_ID, CLIENT_SECRET);
     }
 
     @Test

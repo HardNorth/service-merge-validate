@@ -16,6 +16,7 @@ public class MergeValidateController {
     private final GithubOAuthService authService;
     private final MergeValidateService mergeService;
 
+    @SuppressWarnings("CdiInjectionPointsInspection")
     public MergeValidateController(GithubOAuthService authorizationService, MergeValidateService mergeValidateService) {
         authService = authorizationService;
         mergeService = mergeValidateService;
@@ -42,6 +43,7 @@ public class MergeValidateController {
     @Produces(MediaType.APPLICATION_JSON)
     public Response integrationResult(@PathParam("authUuid") String authUuid, @QueryParam("state") String state,
                                       @QueryParam("code") String code) {
+        authService.authorize(authUuid, code, state);
         return null; // Repo UUID
     }
 
