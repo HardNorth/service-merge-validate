@@ -1,20 +1,16 @@
 package net.hardnorth.github.merge.service;
 
 import com.google.cloud.datastore.*;
-import com.google.cloud.datastore.testing.LocalDatastoreHelper;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import net.hardnorth.github.merge.test.DataStoreExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -30,24 +26,12 @@ public class GithubOAuthServiceTest {
     public static final String CLIENT_ID = "test-client-id";
     public static final String CLIENT_SECRET = "test-client-secret";
 
-    private static final LocalDatastoreHelper HELPER = LocalDatastoreHelper.create(1.0);
-
-    @BeforeAll
-    public static void datastoreHelperInit() throws IOException, InterruptedException {
-        HELPER.start();
-    }
-
-    @AfterAll
-    public static void datastoreHelperTearDown() throws InterruptedException, TimeoutException, IOException {
-        HELPER.stop();
-    }
-
     private Datastore datastore;
     private GithubOAuthService service;
 
     @BeforeEach
     public void setUp() {
-        datastore = HELPER.getOptions().toBuilder().setProjectId(PROJECT_ID).build().getService();
+        datastore = DataStoreExtension.getDataStore(PROJECT_ID);
         service = new GithubOAuthService(datastore, APPLICATION_NAME, SERVICE_URL, CLIENT_ID, CLIENT_SECRET);
     }
 
