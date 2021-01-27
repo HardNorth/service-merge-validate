@@ -52,7 +52,6 @@ public class MergeValidateControllerTest {
                 .queryParam("state", "22222")
                 .get("/integration/result/3333")
                 .then()
-                .log().everything()
                 .statusCode(HttpStatus.SC_FAILED_DEPENDENCY);
     }
 }
