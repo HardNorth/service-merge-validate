@@ -30,7 +30,7 @@ public class MergeValidateControllerTest {
                 .when().get("/healthcheck")
                 .then()
                 .statusCode(200)
-                .body(is(MergeValidateController.class.getSimpleName() + ": OK")).log().everything();
+                .body(is(MergeValidateController.class.getSimpleName() + ": OK"));
     }
 
     @Test
@@ -38,8 +38,9 @@ public class MergeValidateControllerTest {
         given()
                 .when().post("/integration")
                 .then()
+                .log().everything()
                 .statusCode(302)
-                .header(HttpHeaders.LOCATION, startsWith(GITHUB_AUTHORIZE_URL)).log().everything();
+                .header(HttpHeaders.LOCATION, startsWith(GITHUB_AUTHORIZE_URL));
     }
 
     // The request will fail, but code '424' means that the call was happened and Github service context were up
@@ -51,6 +52,7 @@ public class MergeValidateControllerTest {
                 .queryParam("state", "22222")
                 .get("/integration/result/3333")
                 .then()
-                .statusCode(HttpStatus.SC_FAILED_DEPENDENCY).log().everything();
+                .log().everything()
+                .statusCode(HttpStatus.SC_FAILED_DEPENDENCY);
     }
 }
