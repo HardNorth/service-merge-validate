@@ -25,4 +25,6 @@ jobs:
         run: chmod +x mvnw
 
       - name: Build with Maven
-        run: ./mvnw -B --no-transfer-progress test
+        run: |
+          export GOOGLE_CLOUD_PROJECT=test
+          ./mvnw -B --no-transfer-progress test
