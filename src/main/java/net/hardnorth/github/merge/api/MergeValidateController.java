@@ -56,5 +56,6 @@ public class MergeValidateController {
         String authToken = ofNullable(WebServiceCommon.getAuthToken(auth)).orElseThrow(() -> new IllegalArgumentException(
                 "Unable to extract Authentication Token from header"));
         String githubToken = ofNullable(authService.authenticate(authToken)).orElseThrow(AuthenticationException::new);
+        // TODO: implement
     }
 }
