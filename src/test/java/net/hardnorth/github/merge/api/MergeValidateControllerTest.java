@@ -38,7 +38,6 @@ public class MergeValidateControllerTest {
         given()
                 .when().post("/integration")
                 .then()
-                .log().everything()
                 .statusCode(302)
                 .header(HttpHeaders.LOCATION, startsWith(GITHUB_AUTHORIZE_URL));
     }

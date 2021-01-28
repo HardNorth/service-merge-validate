@@ -24,7 +24,16 @@ jobs:
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
 
+      - name: Datastore emulator install
+        run: gcloud components install cloud-datastore-emulator
+
       - name: Build with Maven
         run: |
+          gcloud beta emulators datastore start --host-port localhost:9091 --no-store-on-disk &
           export GOOGLE_CLOUD_PROJECT=test
+          export DATASTORE_DATASET=hardnorth
+          export DATASTORE_EMULATOR_HOST=localhost:9091
+          export DATASTORE_EMULATOR_HOST_PATH=localhost:9091/datastore
+          export DATASTORE_HOST=http://localhost:9091
+          export DATASTORE_PROJECT_ID=test
           ./mvnw -B --no-transfer-progress test
