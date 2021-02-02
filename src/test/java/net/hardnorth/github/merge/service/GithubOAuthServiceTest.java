@@ -1,6 +1,7 @@
 package net.hardnorth.github.merge.service;
 
 import com.google.cloud.datastore.*;
+import net.hardnorth.github.merge.model.GithubCredentials;
 import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
@@ -25,10 +26,11 @@ public class GithubOAuthServiceTest {
     public static final String CLIENT_ID = "test-client-id";
     public static final String CLIENT_SECRET = "test-client-secret";
 
-    private final GithubClientApi github = mock(GithubClientApi.class);
+    private final GithubClient github = mock(GithubClient.class);
 
     private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
-    private final GithubOAuthService service = new GithubOAuthService(datastore, github, APPLICATION_NAME, SERVICE_URL, CLIENT_ID, CLIENT_SECRET);
+    private final GithubOAuthService service = new GithubOAuthService(datastore, github, APPLICATION_NAME, SERVICE_URL,
+            new GithubCredentials(CLIENT_ID, CLIENT_SECRET));
 
     @Test
     public void verify_createIntegration_url() throws MalformedURLException {

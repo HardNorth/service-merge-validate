@@ -5,6 +5,7 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.KeyFactory;
+import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.utils.WebClientCommon;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
@@ -24,23 +25,21 @@ public class GithubOAuthService {
     private static final String STATE = "state";
 
     private final Datastore datastore;
-    private final GithubClientApi github;
+    private final GithubClient github;
     private final KeyFactory keyFactory;
     private final String baseUrl;
-    private final String clientId;
-    private final String clientSecret;
+    private final GithubCredentials credentials;
     private String githubOAuthUrl = DEFAULT_GITHUB_OAUTH_URL;
 
 
     @SuppressWarnings("CdiInjectionPointsInspection")
-    public GithubOAuthService(Datastore datastoreService, GithubClientApi githubApi, String applicationName, String serviceUrl,
-                              String githubApplicationClientId, String githubApplicationClientSecret) {
+    public GithubOAuthService(Datastore datastoreService, GithubClient githubApi, String applicationName, String serviceUrl,
+                              GithubCredentials githubCredentials) {
         datastore = datastoreService;
         github = githubApi;
         baseUrl = serviceUrl;
         keyFactory = datastore.newKeyFactory().setKind(applicationName + "-" + AUTH_KIND);
-        clientId = githubApplicationClientId;
-        clientSecret = githubApplicationClientSecret;
+        credentials = githubCredentials;
     }
 
     public String authenticate(String authUuid) {
@@ -63,7 +62,7 @@ public class GithubOAuthService {
         try {
             uriBuilder = new URIBuilder(githubOAuthUrl);
             uriBuilder.addParameter("redirect_uri", String.format(REDIRECT_URI_PATTERN, baseUrl, authUuid));
-            uriBuilder.addParameter("client_id", clientId);
+            uriBuilder.addParameter("client_id", credentials.getId());
             uriBuilder.addParameter("scope", StringUtils.joinWith(" ", SCOPES.toArray()));
             uriBuilder.addParameter(STATE, stateUuid);
             return uriBuilder.toString();
@@ -73,7 +72,7 @@ public class GithubOAuthService {
     }
 
     public void authorize(String authUuid, String code, String state) {
-        WebClientCommon.executeServiceCall(github.loginApplication(clientId, clientSecret, code, state, null));
+        WebClientCommon.executeServiceCall(github.loginApplication(credentials.getId(), credentials.getToken(), code, state, null));
     }
 
     public void setGithubOAuthUrl(String githubOAuthUrl) {

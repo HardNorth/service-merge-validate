@@ -1,26 +1,43 @@
 package net.hardnorth.github.merge.api;
 
+import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 import net.hardnorth.github.merge.config.PropertyNames;
+import net.hardnorth.github.merge.service.SecretManager;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 public class MergeValidateControllerTest {
 
     public static final String GITHUB_BASE_URL = "http://localhost/";
     public static final String GITHUB_AUTHORIZE_URL = GITHUB_BASE_URL + "login/oauth/authorize";
+    public static final String TEST_CLIENT_ID = "test_client_id";
+    public static final String GITHUB_CLIENT_TOKEN = "test_client_token";
 
     static {
         System.setProperty(PropertyNames.APPLICATION_URL, "https://merge.hardnorth.net");
-        System.setProperty(PropertyNames.GITHUB_CLIENT_ID, "test_client_id");
-        System.setProperty(PropertyNames.GITHUB_CLIENT_SECRET, "test_client_token");
+        System.setProperty(PropertyNames.GITHUB_CLIENT_ID_SECRET, "test_client_id");
+        System.setProperty(PropertyNames.GITHUB_CLIENT_TOKEN_SECRET, "test_client_token");
         System.setProperty(PropertyNames.GITHUB_BASE_URL, GITHUB_BASE_URL);
+    }
+
+    @BeforeAll
+    public static void setupMock() {
+        SecretManager secretManager = mock(SecretManager.class);
+        when(secretManager.getSecrets(any())).thenReturn(Arrays.asList(TEST_CLIENT_ID, GITHUB_CLIENT_TOKEN));
+        QuarkusMock.installMockForType(secretManager, SecretManager.class);
     }
 
     // just to test the context is running

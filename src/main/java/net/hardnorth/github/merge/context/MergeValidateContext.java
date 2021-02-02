@@ -3,9 +3,8 @@ package net.hardnorth.github.merge.context;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import net.hardnorth.github.merge.config.PropertyNames;
-import net.hardnorth.github.merge.service.GithubClientApi;
-import net.hardnorth.github.merge.service.GithubOAuthService;
-import net.hardnorth.github.merge.service.MergeValidateService;
+import net.hardnorth.github.merge.model.GithubCredentials;
+import net.hardnorth.github.merge.service.*;
 import okhttp3.OkHttpClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import retrofit2.Retrofit;
@@ -14,11 +13,13 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 public class MergeValidateContext {
+
     @Produces
     @ApplicationScoped
     public Datastore datastoreService() {
@@ -27,13 +28,12 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public GithubOAuthService authorizationService(Datastore datastore, GithubClientApi githubApi,
+    public GithubOAuthService authorizationService(Datastore datastore, GithubClient githubApi,
                                                    @ConfigProperty(name = PropertyNames.APPLICATION_NAME) String applicationName,
                                                    @ConfigProperty(name = PropertyNames.APPLICATION_URL) String serviceUrl,
                                                    @ConfigProperty(name = PropertyNames.GITHUB_AUTHORIZE_URL) String githubOAuthUrl,
-                                                   @ConfigProperty(name = PropertyNames.GITHUB_CLIENT_ID) String clientId,
-                                                   @ConfigProperty(name = PropertyNames.GITHUB_CLIENT_SECRET) String clientSecret) {
-        GithubOAuthService service = new GithubOAuthService(datastore, githubApi, applicationName, serviceUrl, clientId, clientSecret);
+                                                   GithubCredentials credentials) {
+        GithubOAuthService service = new GithubOAuthService(datastore, githubApi, applicationName, serviceUrl, credentials);
         if (isNotBlank(githubOAuthUrl)) {
             service.setGithubOAuthUrl(githubOAuthUrl);
         }
@@ -48,9 +48,9 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public GithubClientApi githubClientApi(@ConfigProperty(name = PropertyNames.GITHUB_BASE_URL) String githubUrl,
-                                           @ConfigProperty(name = PropertyNames.GITHUB_TIMEOUT_UNIT) TimeUnit timeoutUnit,
-                                           @ConfigProperty(name = PropertyNames.GITHUB_TIMEOUT_VALUE) long timeoutValue) {
+    public GithubClient githubClientApi(@ConfigProperty(name = PropertyNames.GITHUB_BASE_URL) String githubUrl,
+                                        @ConfigProperty(name = PropertyNames.GITHUB_TIMEOUT_UNIT) TimeUnit timeoutUnit,
+                                        @ConfigProperty(name = PropertyNames.GITHUB_TIMEOUT_VALUE) long timeoutValue) {
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(timeoutValue, timeoutUnit)
                 .readTimeout(timeoutValue, timeoutUnit)
@@ -62,6 +62,21 @@ public class MergeValidateContext {
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        return retrofit.create(GithubClientApi.class);
+        return retrofit.create(GithubClient.class);
+    }
+
+    @Produces
+    @ApplicationScoped
+    public SecretManager googleSecretManager(@ConfigProperty(name = PropertyNames.PROJECT_ID) String projectId) {
+        return new GoogleSecretManager(projectId);
+    }
+
+    @Produces
+    @ApplicationScoped
+    public GithubCredentials githubCredentials(SecretManager secretManager,
+                                               @ConfigProperty(name = PropertyNames.GITHUB_CLIENT_ID_SECRET) String idSecret,
+                                               @ConfigProperty(name = PropertyNames.GITHUB_CLIENT_TOKEN_SECRET) String tokenSecret) {
+        List<String> secrets = secretManager.getSecrets(idSecret, tokenSecret);
+        return new GithubCredentials(secrets.get(0), secrets.get(1));
     }
 }
