@@ -1,6 +1,6 @@
 package net.hardnorth.github.merge.api;
 
-import net.hardnorth.github.merge.exception.AuthenticationException;
+import io.quarkus.security.AuthenticationFailedException;
 import net.hardnorth.github.merge.service.GithubOAuthService;
 import net.hardnorth.github.merge.service.MergeValidateService;
 import net.hardnorth.github.merge.utils.WebServiceCommon;
@@ -55,7 +55,7 @@ public class MergeValidateController {
                       @QueryParam("from") String from, @QueryParam("to") String to) {
         String authToken = ofNullable(WebServiceCommon.getAuthToken(auth)).orElseThrow(() -> new IllegalArgumentException(
                 "Unable to extract Authentication Token from header"));
-        String githubToken = ofNullable(authService.authenticate(authToken)).orElseThrow(AuthenticationException::new);
+        String githubToken = ofNullable(authService.authenticate(authToken)).orElseThrow(AuthenticationFailedException::new);
         // TODO: implement
     }
 }

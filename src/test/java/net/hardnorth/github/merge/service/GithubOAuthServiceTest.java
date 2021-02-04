@@ -29,7 +29,7 @@ public class GithubOAuthServiceTest {
     private final GithubClient github = mock(GithubClient.class);
 
     private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
-    private final GithubOAuthService service = new GithubOAuthService(datastore, github, APPLICATION_NAME, SERVICE_URL,
+    private final GithubOAuthService service = new GithubOAuthService(datastore, github, SERVICE_URL,
             new GithubCredentials(CLIENT_ID, CLIENT_SECRET));
 
     @Test

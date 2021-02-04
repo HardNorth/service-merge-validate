@@ -8,4 +8,5 @@ public interface SecretManager {
     @Nonnull
     List<String> getSecrets(String... names);
 
+    void saveSecret(String name, String data);
 }

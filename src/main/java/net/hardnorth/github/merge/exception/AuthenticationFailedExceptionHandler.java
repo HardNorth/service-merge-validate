@@ -1,5 +1,6 @@
 package net.hardnorth.github.merge.exception;
 
+import io.quarkus.security.AuthenticationFailedException;
 import org.apache.http.HttpStatus;
 
 import javax.ws.rs.container.ResourceInfo;
@@ -12,7 +13,7 @@ import javax.ws.rs.ext.Provider;
 import static net.hardnorth.github.merge.utils.ExceptionUtils.getExceptionResponse;
 
 @Provider
-public class AuthenticationExceptionHandler implements ExceptionMapper<AuthenticationException> {
+public class AuthenticationFailedExceptionHandler implements ExceptionMapper<AuthenticationFailedException> {
 
     @Context
     private ResourceInfo resourceInfo;
@@ -21,7 +22,7 @@ public class AuthenticationExceptionHandler implements ExceptionMapper<Authentic
     private UriInfo uriInfo;
 
     @Override
-    public Response toResponse(AuthenticationException exception) {
+    public Response toResponse(AuthenticationFailedException exception) {
         String error = "Authentication failed";
         int status = HttpStatus.SC_BAD_REQUEST;
         return getExceptionResponse(uriInfo, status, error, exception);

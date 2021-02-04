@@ -1,0 +1,7 @@
+indexes:
+  - kind: github-oauth
+    ancestor: no
+    properties:
+      - name: authUuid
+      - name: expires
+        direction: desc

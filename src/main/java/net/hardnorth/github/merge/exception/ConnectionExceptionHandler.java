@@ -26,7 +26,7 @@ public class ConnectionExceptionHandler implements ExceptionMapper<ConnectionExc
 
     @Override
     public Response toResponse(ConnectionException exception) {
-        String error = "Authentication failed";
+        String error = "Downstream service connection error";
         int status = HttpStatus.SC_FAILED_DEPENDENCY;
         LOGGER.warning(simpleFormat("Connection Error: '{}'. {}: '{}'\n{}",
                 error,
