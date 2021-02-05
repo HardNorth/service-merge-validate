@@ -4,7 +4,6 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.datastore.*;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.UnauthorizedException;
 import net.hardnorth.github.merge.exception.ConnectionException;
 import net.hardnorth.github.merge.model.GithubCredentials;
@@ -33,6 +32,7 @@ public class GithubOAuthService {
 
     private final Datastore datastore;
     private final GithubClient github;
+    private final EncryptedStorage storage;
     private final KeyFactory authKeyFactory;
 
     private final String baseUrl;
@@ -41,13 +41,14 @@ public class GithubOAuthService {
 
 
     @SuppressWarnings("CdiInjectionPointsInspection")
-    public GithubOAuthService(Datastore datastoreService, GithubClient githubApi, String serviceUrl,
-                              GithubCredentials githubCredentials) {
+    public GithubOAuthService(Datastore datastoreService, GithubClient githubApi, EncryptedStorage encryptedStorage,
+                              String serviceUrl, GithubCredentials githubCredentials) {
         datastore = datastoreService;
         github = githubApi;
         baseUrl = serviceUrl;
         authKeyFactory = datastore.newKeyFactory().setKind(AUTHORIZATION_KIND);
         credentials = githubCredentials;
+        storage = encryptedStorage;
     }
 
     public String authenticate(String authUuid) {
@@ -65,7 +66,7 @@ public class GithubOAuthService {
                 .set(EXPIRES, Timestamp.of(expireTime.getTime()))
                 .set(STATE, stateUuid)
                 .build();
-        datastore.put(auth);
+        datastore.add(auth);
         URIBuilder uriBuilder;
         try {
             uriBuilder = new URIBuilder(githubOAuthUrl);
@@ -94,22 +95,22 @@ public class GithubOAuthService {
         }
 
         Response<JsonObject> rs = WebClientCommon.executeServiceCall(github.loginApplication(credentials.getId(), credentials.getToken(), code, state, null));
-        if(!rs.isSuccessful() || rs.body() == null) {
+        if (!rs.isSuccessful() || rs.body() == null) {
             throw new ConnectionException("Unable to connect to Github API");
         }
         JsonObject body = rs.body();
-        if(!body.has(ACCESS_TOKEN) || !body.has(ACCESS_TOKEN_TYPE)) {
+        if (!body.has(ACCESS_TOKEN) || !body.has(ACCESS_TOKEN_TYPE)) {
             throw new ConnectionException("Invalid response from Github API");
         }
         JsonElement tokenObject = body.get(ACCESS_TOKEN);
         JsonElement tokenTypeObject = body.get(ACCESS_TOKEN_TYPE);
-        if(tokenObject.isJsonNull() || tokenTypeObject.isJsonNull()) {
+        if (tokenObject.isJsonNull() || tokenTypeObject.isJsonNull()) {
             throw new ConnectionException("Invalid response from Github API");
         }
         String token = tokenObject.getAsString();
         String tokenType = tokenTypeObject.getAsString();
         String authenticationStr = tokenType + " " + token;
-
+        storage.saveValue(null, authUuid, authenticationStr);
     }
 
     public void setGithubOAuthUrl(String githubOAuthUrl) {

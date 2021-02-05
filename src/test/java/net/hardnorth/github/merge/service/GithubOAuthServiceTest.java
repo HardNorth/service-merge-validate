@@ -27,9 +27,10 @@ public class GithubOAuthServiceTest {
     public static final String CLIENT_SECRET = "test-client-secret";
 
     private final GithubClient github = mock(GithubClient.class);
+    private final EncryptedStorage storage = mock(EncryptedStorage.class);
 
     private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
-    private final GithubOAuthService service = new GithubOAuthService(datastore, github, SERVICE_URL,
+    private final GithubOAuthService service = new GithubOAuthService(datastore, github, storage, SERVICE_URL,
             new GithubCredentials(CLIENT_ID, CLIENT_SECRET));
 
     @Test

@@ -7,8 +7,6 @@ import net.hardnorth.github.merge.exception.NotFoundException;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.*;
 import okhttp3.OkHttpClient;
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -17,9 +15,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import java.security.GeneralSecurityException;
-import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -34,11 +30,11 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public GithubOAuthService authorizationService(Datastore datastore, GithubClient githubApi,
+    public GithubOAuthService authorizationService(Datastore datastore, GithubClient githubApi, EncryptedStorage encryptedStorage,
                                                    @ConfigProperty(name = PropertyNames.APPLICATION_URL) String serviceUrl,
                                                    @ConfigProperty(name = PropertyNames.GITHUB_AUTHORIZE_URL) String githubOAuthUrl,
                                                    GithubCredentials credentials) {
-        GithubOAuthService service = new GithubOAuthService(datastore, githubApi, serviceUrl, credentials);
+        GithubOAuthService service = new GithubOAuthService(datastore, githubApi, encryptedStorage, serviceUrl, credentials);
         if (isNotBlank(githubOAuthUrl)) {
             service.setGithubOAuthUrl(githubOAuthUrl);
         }
@@ -82,19 +78,14 @@ public class MergeValidateContext {
             Datastore datastore, SecretManager secretManager,
             @ConfigProperty(name = PropertyNames.GITHUB_ENCRYPTION_KEY_SECRET) String keySecret)
             throws GeneralSecurityException {
-        byte[] key;
         try {
-            key = Base64.getDecoder().decode(secretManager.getSecrets(keySecret).get(0));
+            return new DatastoreEncryptedStorage(datastore, secretManager.getSecret(keySecret));
         } catch (NotFoundException ignore) {
-            try {
-                key = Hex.decodeHex(UUID.randomUUID().toString().replace("-", ""));
-            } catch (DecoderException e) {
-                throw new RuntimeException(e); // actually should neve happen, since UUIDs use hex strings
-            }
-
-            secretManager.saveSecret(keySecret, Base64.getEncoder().encodeToString(key));
+            DatastoreEncryptedStorage storage = new DatastoreEncryptedStorage(datastore);
+            String key = storage.getEncryptionKey();
+            secretManager.saveSecret(keySecret, key);
+            return storage;
         }
-        return new DatastoreEncryptedStorage(datastore, key);
     }
 
     @Produces

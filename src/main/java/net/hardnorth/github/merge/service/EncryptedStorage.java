@@ -1,7 +1,15 @@
 package net.hardnorth.github.merge.service;
 
-public interface EncryptedStorage {
-    String getValue(String key);
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-    void saveValue(String key, String value);
+public interface EncryptedStorage {
+
+    @Nullable
+    String getValue(@Nullable String authKey, @Nonnull String key);
+
+    void saveValue(@Nullable String authKey, @Nonnull String key, @Nonnull String value);
+
+    @Nonnull
+    String getEncryptionKey();
 }
