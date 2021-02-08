@@ -3,6 +3,7 @@ package net.hardnorth.github.merge.service;
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.api.gax.rpc.StatusCode;
 import com.google.cloud.secretmanager.v1.*;
+import net.hardnorth.github.merge.service.impl.GoogleSecretManager;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;

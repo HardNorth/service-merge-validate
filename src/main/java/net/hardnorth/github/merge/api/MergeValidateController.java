@@ -1,8 +1,8 @@
 package net.hardnorth.github.merge.api;
 
 import io.quarkus.security.AuthenticationFailedException;
-import net.hardnorth.github.merge.service.GithubOAuthService;
-import net.hardnorth.github.merge.service.MergeValidateService;
+import net.hardnorth.github.merge.service.impl.GithubOAuthService;
+import net.hardnorth.github.merge.service.impl.MergeValidateService;
 import net.hardnorth.github.merge.utils.WebServiceCommon;
 
 import javax.ws.rs.*;

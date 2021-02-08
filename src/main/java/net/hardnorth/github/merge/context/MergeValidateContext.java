@@ -3,9 +3,12 @@ package net.hardnorth.github.merge.context;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import net.hardnorth.github.merge.config.PropertyNames;
-import net.hardnorth.github.merge.exception.NotFoundException;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.*;
+import net.hardnorth.github.merge.service.impl.DatastoreEncryptedStorage;
+import net.hardnorth.github.merge.service.impl.GithubOAuthService;
+import net.hardnorth.github.merge.service.impl.GoogleSecretManager;
+import net.hardnorth.github.merge.service.impl.MergeValidateService;
 import okhttp3.OkHttpClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import retrofit2.Retrofit;
@@ -14,7 +17,6 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
-import java.security.GeneralSecurityException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -75,17 +77,8 @@ public class MergeValidateContext {
     @Produces
     @ApplicationScoped
     public EncryptedStorage datastoreEncryptedStorage(
-            Datastore datastore, SecretManager secretManager,
-            @ConfigProperty(name = PropertyNames.GITHUB_ENCRYPTION_KEY_SECRET) String keySecret)
-            throws GeneralSecurityException {
-        try {
-            return new DatastoreEncryptedStorage(datastore, secretManager.getSecret(keySecret));
-        } catch (NotFoundException ignore) {
-            DatastoreEncryptedStorage storage = new DatastoreEncryptedStorage(datastore);
-            String key = storage.getEncryptionKey();
-            secretManager.saveSecret(keySecret, key);
-            return storage;
-        }
+            Datastore datastore, EncryptionService encryptionService) {
+        return new DatastoreEncryptedStorage(datastore, encryptionService);
     }
 
     @Produces

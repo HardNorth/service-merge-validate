@@ -1,4 +1,4 @@
-package net.hardnorth.github.merge.service;
+package net.hardnorth.github.merge.service.impl;
 
 import com.google.cloud.datastore.Datastore;
 

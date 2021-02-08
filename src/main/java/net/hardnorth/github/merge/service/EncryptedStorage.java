@@ -9,7 +9,4 @@ public interface EncryptedStorage {
     String getValue(@Nullable String authKey, @Nonnull String key);
 
     void saveValue(@Nullable String authKey, @Nonnull String key, @Nonnull String value);
-
-    @Nonnull
-    String getEncryptionKey();
 }

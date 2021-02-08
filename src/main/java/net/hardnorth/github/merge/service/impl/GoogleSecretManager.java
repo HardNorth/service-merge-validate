@@ -1,10 +1,11 @@
-package net.hardnorth.github.merge.service;
+package net.hardnorth.github.merge.service.impl;
 
 import com.google.api.gax.rpc.ApiException;
 import com.google.cloud.secretmanager.v1.*;
 import com.google.protobuf.ByteString;
 import net.hardnorth.github.merge.exception.ConnectionException;
 import net.hardnorth.github.merge.exception.NotFoundException;
+import net.hardnorth.github.merge.service.SecretManager;
 import org.apache.http.HttpStatus;
 
 import javax.annotation.Nonnull;

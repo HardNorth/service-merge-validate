@@ -2,8 +2,10 @@ package net.hardnorth.github.merge.service;
 
 import com.google.cloud.datastore.*;
 import net.hardnorth.github.merge.model.GithubCredentials;
+import net.hardnorth.github.merge.service.impl.GithubOAuthService;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -29,7 +31,7 @@ public class GithubOAuthServiceTest {
     private final GithubClient github = mock(GithubClient.class);
     private final EncryptedStorage storage = mock(EncryptedStorage.class);
 
-    private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
+    private final Datastore datastore = DatastoreOptions.newBuilder().setNamespace(APPLICATION_NAME).build().getService();
     private final GithubOAuthService service = new GithubOAuthService(datastore, github, storage, SERVICE_URL,
             new GithubCredentials(CLIENT_ID, CLIENT_SECRET));
 
@@ -57,17 +59,15 @@ public class GithubOAuthServiceTest {
         URL url = new URL(urlStr);
         Map<String, String> urlQuery = Arrays.stream(url.getQuery().split("&"))
                 .collect(Collectors.toMap(s -> s.split("=")[0], s -> URLDecoder.decode(s.split("=")[1], StandardCharsets.UTF_8)));
-        String authUuid = urlQuery.get("redirect_uri").substring(urlQuery.get("redirect_uri").lastIndexOf('/') + 1);
-        EntityQuery query = Query.newEntityQueryBuilder()
-                .setKind(APPLICATION_NAME + "-" + "github-oauth")
-                .setFilter(StructuredQuery.PropertyFilter.eq("authUuid", authUuid))
-                .build();
+        String authToken = urlQuery.get("redirect_uri").substring(urlQuery.get("redirect_uri").lastIndexOf('/') + 1);
+        byte[] authTokenBytes = Base64.getUrlDecoder().decode(authToken);
+        byte[] keyBytes = new byte[authTokenBytes[1]];
+        System.arraycopy(authTokenBytes, 2, keyBytes, 0, keyBytes.length);
+        long keyValue = new BigInteger(keyBytes).longValue();
+        Key key = datastore.newKeyFactory().setKind("github-oauth").newKey(keyValue);
 
-        QueryResults<Entity> result = datastore.run(query);
-        List<Entity> entities = StreamSupport.stream(Spliterators.spliteratorUnknownSize(result, Spliterator.ORDERED), false)
-                .collect(Collectors.toList());
-        assertThat(entities, hasSize(1));
-        Entity entity = entities.get(0);
+        Entity entity = datastore.get(key);
+        assertThat(entity, notNullValue());
         Calendar futureCalendar = Calendar.getInstance();
         futureCalendar.add(Calendar.HOUR, 1);
         assertThat(
