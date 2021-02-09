@@ -5,10 +5,7 @@ import com.google.cloud.datastore.DatastoreOptions;
 import net.hardnorth.github.merge.config.PropertyNames;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.*;
-import net.hardnorth.github.merge.service.impl.DatastoreEncryptedStorage;
-import net.hardnorth.github.merge.service.impl.GithubOAuthService;
-import net.hardnorth.github.merge.service.impl.GoogleSecretManager;
-import net.hardnorth.github.merge.service.impl.MergeValidateService;
+import net.hardnorth.github.merge.service.impl.*;
 import okhttp3.OkHttpClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import retrofit2.Retrofit;
@@ -17,6 +14,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
+import java.security.GeneralSecurityException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -88,5 +86,13 @@ public class MergeValidateContext {
                                                @ConfigProperty(name = PropertyNames.GITHUB_CLIENT_TOKEN_SECRET) String tokenSecret) {
         List<String> secrets = secretManager.getSecrets(idSecret, tokenSecret);
         return new GithubCredentials(secrets.get(0), secrets.get(1));
+    }
+
+    @Produces
+    @ApplicationScoped
+    public EncryptionService tinkEncryptionService(SecretManager secretManager,
+                                                   @ConfigProperty(name = PropertyNames.GITHUB_ENCRYPTION_KEY_SECRET) String keyName)
+            throws GeneralSecurityException {
+        return new TinkEncryptionService(secretManager, keyName);
     }
 }

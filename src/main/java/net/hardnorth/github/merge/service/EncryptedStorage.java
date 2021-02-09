@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 public interface EncryptedStorage {
 
     @Nullable
-    String getValue(@Nullable String authKey, @Nonnull String key);
+    String getValue(@Nonnull String key, @Nullable String authKey);
 
-    void saveValue(@Nullable String authKey, @Nonnull String key, @Nonnull String value);
+    void saveValue(@Nonnull String key, @Nonnull String value, @Nullable String authKey);
 }

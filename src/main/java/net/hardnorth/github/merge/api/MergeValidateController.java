@@ -1,23 +1,27 @@
 package net.hardnorth.github.merge.api;
 
 import io.quarkus.security.AuthenticationFailedException;
-import net.hardnorth.github.merge.service.impl.GithubOAuthService;
 import net.hardnorth.github.merge.service.impl.MergeValidateService;
+import net.hardnorth.github.merge.service.OAuthService;
 import net.hardnorth.github.merge.utils.WebServiceCommon;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpStatus;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import java.nio.charset.StandardCharsets;
+
 import static java.util.Optional.ofNullable;
 
 @Path("/")
 public class MergeValidateController {
-    private final GithubOAuthService authService;
+    private final OAuthService authService;
     private final MergeValidateService mergeService;
 
     @SuppressWarnings("CdiInjectionPointsInspection")
-    public MergeValidateController(GithubOAuthService authorizationService, MergeValidateService mergeValidateService) {
+    public MergeValidateController(OAuthService authorizationService, MergeValidateService mergeValidateService) {
         authService = authorizationService;
         mergeService = mergeValidateService;
     }
@@ -40,11 +44,14 @@ public class MergeValidateController {
 
     @GET
     @Path("integration/result/{authUuid}")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_PLAIN)
     public Response integrationResult(@PathParam("authUuid") String authUuid, @QueryParam("state") String state,
                                       @QueryParam("code") String code) {
-        authService.authorize(authUuid, code, state);
-        return null; // Repo UUID
+        String userToken = authService.authorize(authUuid, code, state);
+        return Response.status(HttpStatus.SC_OK)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
+                .encoding(StandardCharsets.UTF_8.name())
+                .entity(userToken).build();
     }
 
     @PUT
