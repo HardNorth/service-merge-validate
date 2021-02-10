@@ -110,7 +110,7 @@ public class GithubOAuthService implements OAuthService {
         Object bareKey = authKey.getNameOrId();
         KeyType type = KeyType.getKeyType(bareKey);
         byte[] keyBytes = Keys.getKeyBytes(bareKey);
-        return getAuthToken(type, keyBytes, tokenBytes);
+        return encodeAuthToken(type, keyBytes, tokenBytes);
     }
 
     @Override

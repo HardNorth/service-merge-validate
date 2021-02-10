@@ -75,7 +75,7 @@ public class MergeValidateControllerTest {
                 .when()
                 .queryParam("code", "11111")
                 .queryParam("state", "22222")
-                .get("/integration/result/3333")
+                .get("/integration/result/AAcSSY81gAAAjoId_mI6Q3moVpishyO0iw")
                 .then()
                 .statusCode(HttpStatus.SC_UNAUTHORIZED);
     }
