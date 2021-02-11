@@ -4,8 +4,13 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import net.hardnorth.github.merge.config.PropertyNames;
 import net.hardnorth.github.merge.model.GithubCredentials;
-import net.hardnorth.github.merge.service.*;
-import net.hardnorth.github.merge.service.impl.*;
+import net.hardnorth.github.merge.service.EncryptionService;
+import net.hardnorth.github.merge.service.GithubClient;
+import net.hardnorth.github.merge.service.SecretManager;
+import net.hardnorth.github.merge.service.impl.GithubOAuthService;
+import net.hardnorth.github.merge.service.impl.GoogleSecretManager;
+import net.hardnorth.github.merge.service.impl.MergeValidateService;
+import net.hardnorth.github.merge.service.impl.TinkEncryptionService;
 import okhttp3.OkHttpClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import retrofit2.Retrofit;
@@ -30,11 +35,11 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public GithubOAuthService authorizationService(Datastore datastore, GithubClient githubApi, EncryptedStorage encryptedStorage,
+    public GithubOAuthService authorizationService(Datastore datastore, GithubClient githubApi, EncryptionService encryptionService,
                                                    @ConfigProperty(name = PropertyNames.APPLICATION_URL) String serviceUrl,
                                                    @ConfigProperty(name = PropertyNames.GITHUB_AUTHORIZE_URL) String githubOAuthUrl,
                                                    GithubCredentials credentials) {
-        GithubOAuthService service = new GithubOAuthService(datastore, githubApi, encryptedStorage, serviceUrl, credentials);
+        GithubOAuthService service = new GithubOAuthService(datastore, githubApi, encryptionService, serviceUrl, credentials);
         if (isNotBlank(githubOAuthUrl)) {
             service.setGithubOAuthUrl(githubOAuthUrl);
         }
@@ -70,13 +75,6 @@ public class MergeValidateContext {
     @ApplicationScoped
     public SecretManager googleSecretManager(@ConfigProperty(name = PropertyNames.PROJECT_ID) String projectId) {
         return new GoogleSecretManager(projectId);
-    }
-
-    @Produces
-    @ApplicationScoped
-    public EncryptedStorage datastoreEncryptedStorage(
-            Datastore datastore, EncryptionService encryptionService) {
-        return new DatastoreEncryptedStorage(datastore, encryptionService);
     }
 
     @Produces

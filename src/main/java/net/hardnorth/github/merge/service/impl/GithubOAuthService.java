@@ -11,13 +11,12 @@ import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.UnauthorizedException;
 import net.hardnorth.github.merge.exception.ConnectionException;
 import net.hardnorth.github.merge.model.GithubCredentials;
-import net.hardnorth.github.merge.service.EncryptedStorage;
+import net.hardnorth.github.merge.service.EncryptionService;
 import net.hardnorth.github.merge.service.GithubClient;
 import net.hardnorth.github.merge.service.OAuthService;
 import net.hardnorth.github.merge.utils.KeyType;
 import net.hardnorth.github.merge.utils.Keys;
 import net.hardnorth.github.merge.utils.WebClientCommon;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -28,11 +27,9 @@ import retrofit2.Response;
 import javax.annotation.Nonnull;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static net.hardnorth.github.merge.utils.Keys.*;
 
@@ -43,14 +40,15 @@ public class GithubOAuthService implements OAuthService {
     public static final RuntimeException INVALID_API_RESPONSE = new ConnectionException("Invalid response from Github API");
     public static final String DEFAULT_GITHUB_OAUTH_URL = "https://github.com/login/oauth/authorize";
     public static final List<String> SCOPES = Arrays.asList("repo", "user:email");
+    public static final Charset CHARSET = StandardCharsets.UTF_8;
 
     public static final String REDIRECT_URI_PATTERN = "%s/integration/result/%s";
     private static final String AUTHORIZATION_KIND = "github-oauth";
-    private static final String AUTHENTICATION_KIND = "authentication";
+    private static final String INTEGRATIONS_KIND = "integrations";
     private static final String AUTH_HASH = "authHash";
     private static final String EXPIRES = "expires";
     private static final String STATE = "state";
-    private static final String DATA_REFERENCE = "dataRef";
+    private static final String INTEGRATION_DATA = "data";
     private static final String CREATION_DATE = "creationDate";
     private static final String ACCESS_DATE = "accessDate";
     private static final String ACCESS_TOKEN = "access_token";
@@ -58,9 +56,9 @@ public class GithubOAuthService implements OAuthService {
 
     private final Datastore datastore;
     private final GithubClient github;
-    private final EncryptedStorage storage;
+    private final EncryptionService encryption;
     private final KeyFactory authorizationKeyFactory;
-    private final KeyFactory authenticationKeyFactory;
+    private final KeyFactory integrationKeyFactory;
 
     private final String baseUrl;
     private final GithubCredentials credentials;
@@ -68,15 +66,15 @@ public class GithubOAuthService implements OAuthService {
 
 
     @SuppressWarnings("CdiInjectionPointsInspection")
-    public GithubOAuthService(Datastore datastoreService, GithubClient githubApi, EncryptedStorage encryptedStorage,
+    public GithubOAuthService(Datastore datastoreService, GithubClient githubApi, EncryptionService encryptedService,
                               String serviceUrl, GithubCredentials githubCredentials) {
         datastore = datastoreService;
         github = githubApi;
         baseUrl = serviceUrl;
         authorizationKeyFactory = datastore.newKeyFactory().setKind(AUTHORIZATION_KIND);
-        authenticationKeyFactory = datastore.newKeyFactory().setKind(AUTHENTICATION_KIND);
+        integrationKeyFactory = datastore.newKeyFactory().setKind(INTEGRATIONS_KIND);
         credentials = githubCredentials;
-        storage = encryptedStorage;
+        encryption = encryptedService;
     }
 
     @Override
@@ -84,18 +82,24 @@ public class GithubOAuthService implements OAuthService {
     public String authenticate(@Nonnull String authToken) {
         Triple<KeyType, byte[], byte[]> bareToken = decodeAuthToken(authToken);
         Key authKey = bareToken.getLeft() == KeyType.LONG ?
-                authenticationKeyFactory.newKey(new BigInteger(bareToken.getMiddle()).longValue()) :
-                authenticationKeyFactory.newKey(new String(bareToken.getMiddle(), StandardCharsets.UTF_8));
+                integrationKeyFactory.newKey(new BigInteger(bareToken.getMiddle()).longValue()) :
+                integrationKeyFactory.newKey(new String(bareToken.getMiddle(), CHARSET));
         Entity entity = datastore.get(authKey);
-        if (entity == null || !BCrypt.checkpw(bareToken.getRight(), entity.getString(AUTH_HASH))) {
+        if (entity == null) {
             throw AUTHENTICATION_EXCEPTION;
         }
-
-        String githubToken = storage.getValue(entity.getString(DATA_REFERENCE), Hex.encodeHexString(bareToken.getRight()));
-        if (githubToken == null) {
-            throw new IllegalArgumentException("Unable to find GitHub data");
+        String hash = entity.getString(AUTH_HASH);
+        if (!BCrypt.checkpw(bareToken.getRight(), hash)) {
+            throw AUTHENTICATION_EXCEPTION;
         }
-        return githubToken;
+        try {
+            return new String(encryption.decrypt(Base64.getDecoder().decode(entity.getString(INTEGRATION_DATA)), hash.getBytes(CHARSET)), CHARSET);
+        } finally {
+            Entity valueAccess = Entity.newBuilder(entity)
+                    .set(ACCESS_DATE, Timestamp.now())
+                    .build();
+            datastore.put(valueAccess);
+        }
     }
 
     private Pair<byte[], String> generateAuthToken() {
@@ -149,7 +153,7 @@ public class GithubOAuthService implements OAuthService {
         Triple<KeyType, byte[], byte[]> bareToken = decodeAuthToken(authToken);
         Key authKey = bareToken.getLeft() == KeyType.LONG ?
                 authorizationKeyFactory.newKey(new BigInteger(bareToken.getMiddle()).longValue()) :
-                authorizationKeyFactory.newKey(new String(bareToken.getMiddle(), StandardCharsets.UTF_8));
+                authorizationKeyFactory.newKey(new String(bareToken.getMiddle(), CHARSET));
 
         Timestamp now = Timestamp.now();
         Entity entity = datastore.get(authKey);
@@ -164,7 +168,7 @@ public class GithubOAuthService implements OAuthService {
         // Authorize
         Response<JsonObject> rs = WebClientCommon.executeServiceCall(github.loginApplication(credentials.getId(),
                 credentials.getToken(), code, state, null));
-        if (!rs.isSuccessful() || rs.body() == null) {
+        if (rs.body() == null) {
             throw new ConnectionException("Unable to connect to Github API");
         }
         JsonObject body = rs.body();
@@ -182,18 +186,16 @@ public class GithubOAuthService implements OAuthService {
 
         // Generate new authentication data
         Pair<byte[], String> userToken = generateAuthToken();
-        Key userAuthKey = datastore.allocateId(authenticationKeyFactory.newKey());
+        Key userAuthKey = datastore.allocateId(integrationKeyFactory.newKey());
         String userTokenStr = generateTokenString(userAuthKey, userToken.getLeft());
-        String credentialsKey = UUID.randomUUID().toString();
 
-        Entity userAuth = Entity.newBuilder(userAuthKey)
+        Entity integration = Entity.newBuilder(userAuthKey)
                 .set(AUTH_HASH, userToken.getRight())
                 .set(CREATION_DATE, now)
                 .set(ACCESS_DATE, now)
-                .set(DATA_REFERENCE, credentialsKey)
+                .set(INTEGRATION_DATA, Base64.getEncoder().encodeToString(encryption.encrypt(githubAuthenticationStr.getBytes(CHARSET), userToken.getRight().getBytes(CHARSET))))
                 .build();
-        datastore.add(userAuth);
-        storage.saveValue(credentialsKey, githubAuthenticationStr, Hex.encodeHexString(userToken.getLeft()));
+        datastore.add(integration);
         return userTokenStr;
     }
 
