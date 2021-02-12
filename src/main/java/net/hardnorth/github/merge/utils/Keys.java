@@ -64,7 +64,12 @@ public class Keys {
         if (token == null) {
             throw INVALID_TOKEN;
         }
-        byte[] tokenBytes = Base64.getUrlDecoder().decode(token);
+        byte[] tokenBytes;
+        try {
+            tokenBytes = Base64.getUrlDecoder().decode(token);
+        } catch (IllegalArgumentException e) {
+            throw INVALID_TOKEN;
+        }
         if (tokenBytes[0] < 0 || tokenBytes[0] > KeyType.values().length) {
             throw INVALID_TOKEN;
         }

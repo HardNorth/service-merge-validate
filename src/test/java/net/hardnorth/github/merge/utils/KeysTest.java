@@ -48,13 +48,15 @@ public class KeysTest {
     }
 
     private static String[] invalidTokens() {
-        return new String[]{"333", null, "AAcSSY81", "AAcSSY81gAAA", "AAcSSY81gAAAj"};
+        return new String[]{"333", null, "AAcSSY81", "AAcSSY81gAAA", "AAcSSY81gAAAj", "AAcSSY81gAAAj%", "AAcSSY81gAAAj&",
+        "https://github.com/login/oauth/authorize?redirect_uri=http%3A%2F%2Flocalhost%3A8889%2Fintegration%2Fresult%2FAAcWat81gAAAeEg2ziDZSPK6Ff5jmxKN7A&client_id=test-client-id&scope=repo+user%3Aemail&state=51018ada-32c5-4635-956b-bd2304dba1d4"};
     }
 
     @ParameterizedTest
     @MethodSource("invalidTokens")
     public void verify_invalid_token_decode(String value) {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> Keys.decodeAuthToken(value), "Invalid token");
+        IllegalArgumentException exception = Assertions.assertThrows(IllegalArgumentException.class, () -> Keys.decodeAuthToken(value));
+        assertThat(exception.getMessage(), equalTo("Invalid token"));
     }
 
     @Test

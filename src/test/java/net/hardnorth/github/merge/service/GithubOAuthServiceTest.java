@@ -4,11 +4,14 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.impl.GithubOAuthService;
+import net.hardnorth.github.merge.utils.KeyType;
+import net.hardnorth.github.merge.utils.Keys;
+import org.apache.commons.lang3.tuple.Triple;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -22,12 +25,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.same;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 public class GithubOAuthServiceTest {
     public static final String PROJECT_ID = "test";
@@ -55,7 +57,7 @@ public class GithubOAuthServiceTest {
         String urlStr = service.createIntegration();
         assertThat(urlStr, startsWith(GITHUB_URL));
 
-        Map<String, String> query =parseQuery(urlStr);
+        Map<String, String> query = parseQuery(urlStr);
 
         assertThat(query, hasEntry(equalTo("redirect_uri"), startsWith(SERVICE_URL + "/integration/result/")));
         assertThat(query, hasEntry(equalTo("state"), not(emptyOrNullString())));
@@ -89,7 +91,9 @@ public class GithubOAuthServiceTest {
     public void verify_authorization_success() throws IOException {
         String urlStr = service.createIntegration();
         Map<String, String> urlQuery = parseQuery(urlStr);
-        String authToken = urlStr.substring(urlStr.lastIndexOf('/') + 1);
+        String redirectUriPath = new URL(urlQuery.get("redirect_uri")).getPath();
+        String authToken = redirectUriPath.substring(redirectUriPath.lastIndexOf('/') + 1);
+        String state = urlQuery.get("state");
         String code = UUID.randomUUID().toString();
         Call<JsonObject> call = mock(Call.class);
         Response<JsonObject> response = mock(Response.class);
@@ -102,8 +106,36 @@ public class GithubOAuthServiceTest {
         responseBody.addProperty("access_token", accessToken);
         responseBody.addProperty("token_type", tokenType);
         when(response.body()).thenReturn(responseBody);
+        when(encryptionService.encrypt(any(), any())).thenReturn(new byte[]{0, 0, 0});
 
-        when(github.loginApplication(eq(CLIENT_ID), eq(CLIENT_SECRET), same(code), eq(urlQuery.get("state")), isNull())).thenReturn(call);
-//        service.authorize()
+        when(github.loginApplication(eq(CLIENT_ID), eq(CLIENT_SECRET), same(code), eq(state), isNull())).thenReturn(call);
+        String result = service.authorize(authToken, code, state);
+        assertThat(result, not(emptyOrNullString()));
+
+        ArgumentCaptor<byte[]> captor = ArgumentCaptor.forClass(byte[].class);
+        verify(encryptionService).encrypt(captor.capture(), any());
+        List<byte[]> encryptionValues = captor.getAllValues();
+        assertThat(encryptionValues.get(0), equalTo((tokenType + " " + accessToken).getBytes(StandardCharsets.UTF_8)));
+
+        Triple<KeyType, byte[], byte[]> resultToken = Keys.decodeAuthToken(result);
+        Key key = datastore.newKeyFactory().setKind("integrations").newKey(new BigInteger(resultToken.getMiddle()).longValue());
+        Entity entity = datastore.get(key);
+        assertThat(entity, notNullValue());
+        Date now = Calendar.getInstance().getTime();
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE, -1);
+        Date minuteAgo = calendar.getTime();
+
+        assertThat(
+                entity.getTimestamp("creationDate").toDate(),
+                allOf(lessThanOrEqualTo(now), greaterThan(minuteAgo))
+        );
+
+        assertThat(
+                entity.getTimestamp("accessDate").toDate(),
+                allOf(lessThanOrEqualTo(now), greaterThan(minuteAgo))
+        );
+
+        assertThat(entity.getString("data"), equalTo("AAAA"));
     }
 }
