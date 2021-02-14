@@ -7,9 +7,8 @@ import com.google.cloud.datastore.Key;
 import com.google.gson.JsonObject;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.impl.GithubOAuthService;
-import net.hardnorth.github.merge.utils.KeyType;
 import net.hardnorth.github.merge.utils.Keys;
-import org.apache.commons.lang3.tuple.Triple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import retrofit2.Call;
@@ -32,13 +31,15 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 public class GithubOAuthServiceTest {
-    public static final String PROJECT_ID = "test";
     public static final int SERVICE_PORT = 8889;
     public static final String SERVICE_URL = "http://localhost:" + SERVICE_PORT;
     public static final String GITHUB_URL = "https://github.com/login/oauth/authorize";
     public static final String APPLICATION_NAME = "test-application";
     public static final String CLIENT_ID = "test-client-id";
     public static final String CLIENT_SECRET = "test-client-secret";
+
+    private static final byte[] ENCRYPTED_TOKEN = new byte[]{0, 0, 0};
+    private static final String ENCRYPTED_TOKEN_BASE64 = Base64.getUrlEncoder().withoutPadding().encodeToString(ENCRYPTED_TOKEN);
 
     private final GithubClient github = mock(GithubClient.class);
     private final EncryptionService encryptionService = mock(EncryptionService.class);
@@ -87,18 +88,14 @@ public class GithubOAuthServiceTest {
         );
     }
 
-    @Test
-    public void verify_authorization_success() throws IOException {
-        String urlStr = service.createIntegration();
-        Map<String, String> urlQuery = parseQuery(urlStr);
-        String redirectUriPath = new URL(urlQuery.get("redirect_uri")).getPath();
-        String authToken = redirectUriPath.substring(redirectUriPath.lastIndexOf('/') + 1);
-        String state = urlQuery.get("state");
-        String code = UUID.randomUUID().toString();
+    @SuppressWarnings("unchecked")
+    private Pair<String, String> mockAuthorization(String state) throws IOException {
         Call<JsonObject> call = mock(Call.class);
         Response<JsonObject> response = mock(Response.class);
         when(call.execute()).thenReturn(response);
         when(response.isSuccessful()).thenReturn(Boolean.TRUE);
+
+        String code = UUID.randomUUID().toString();
 
         String accessToken = UUID.randomUUID().toString();
         String tokenType = "bearer";
@@ -106,19 +103,36 @@ public class GithubOAuthServiceTest {
         responseBody.addProperty("access_token", accessToken);
         responseBody.addProperty("token_type", tokenType);
         when(response.body()).thenReturn(responseBody);
-        when(encryptionService.encrypt(any(), any())).thenReturn(new byte[]{0, 0, 0});
+        when(encryptionService.encrypt(any(), any())).thenReturn(ENCRYPTED_TOKEN);
 
         when(github.loginApplication(eq(CLIENT_ID), eq(CLIENT_SECRET), same(code), eq(state), isNull())).thenReturn(call);
-        String result = service.authorize(authToken, code, state);
-        assertThat(result, not(emptyOrNullString()));
+        return Pair.of(code, accessToken);
+    }
+
+    private static String stripAuthToken(String redirectUrl) throws MalformedURLException {
+        String redirectUriPath = new URL(redirectUrl).getPath();
+        return redirectUriPath.substring(redirectUriPath.lastIndexOf('/') + 1);
+    }
+
+    @Test
+    public void verify_authorization_success() throws IOException {
+        String urlStr = service.createIntegration();
+        Map<String, String> urlQuery = parseQuery(urlStr);
+        String authToken = stripAuthToken(urlQuery.get("redirect_uri"));
+        String state = urlQuery.get("state");
+
+        Pair<String, String> tokens = mockAuthorization(state);
+
+        String userAccessToken = service.authorize(authToken, tokens.getKey(), state);
+        assertThat(userAccessToken, not(emptyOrNullString()));
 
         ArgumentCaptor<byte[]> captor = ArgumentCaptor.forClass(byte[].class);
         verify(encryptionService).encrypt(captor.capture(), any());
         List<byte[]> encryptionValues = captor.getAllValues();
-        assertThat(encryptionValues.get(0), equalTo((tokenType + " " + accessToken).getBytes(StandardCharsets.UTF_8)));
+        assertThat(encryptionValues.get(0), equalTo(("bearer" + " " + tokens.getValue()).getBytes(StandardCharsets.UTF_8)));
 
-        Triple<KeyType, byte[], byte[]> resultToken = Keys.decodeAuthToken(result);
-        Key key = datastore.newKeyFactory().setKind("integrations").newKey(new BigInteger(resultToken.getMiddle()).longValue());
+        Key key = datastore.newKeyFactory().setKind("integrations")
+                .newKey(new BigInteger(Keys.decodeAuthToken(userAccessToken).getMiddle()).longValue());
         Entity entity = datastore.get(key);
         assertThat(entity, notNullValue());
         Date now = Calendar.getInstance().getTime();
@@ -136,6 +150,38 @@ public class GithubOAuthServiceTest {
                 allOf(lessThanOrEqualTo(now), greaterThan(minuteAgo))
         );
 
-        assertThat(entity.getString("data"), equalTo("AAAA"));
+        assertThat(entity.getString("data"), equalTo(ENCRYPTED_TOKEN_BASE64));
+    }
+
+    @Test
+    public void verify_authentication_success() throws IOException, InterruptedException {
+        String urlStr = service.createIntegration();
+        Map<String, String> urlQuery = parseQuery(urlStr);
+        String authToken = stripAuthToken(urlQuery.get("redirect_uri"));
+        String state = urlQuery.get("state");
+
+        Pair<String, String> tokens = mockAuthorization(state);
+
+        String userAccessToken = service.authorize(authToken, tokens.getKey(), state);
+
+        when(encryptionService.decrypt(any(), any())).thenReturn(tokens.getValue().getBytes(StandardCharsets.UTF_8));
+
+        Thread.sleep(20);
+
+        String result = service.authenticate(userAccessToken);
+        assertThat(result, equalTo(tokens.getValue()));
+
+        Key key = datastore.newKeyFactory().setKind("integrations")
+                .newKey(new BigInteger(Keys.decodeAuthToken(userAccessToken).getMiddle()).longValue());
+        Entity entity = datastore.get(key);
+
+        Date now = Calendar.getInstance().getTime();
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE, -1);
+        Date minuteAgo = calendar.getTime();
+        Date creationDate = entity.getTimestamp("creationDate").toDate();
+
+        assertThat(entity.getTimestamp("accessDate").toDate(), allOf(greaterThan(minuteAgo),
+                lessThanOrEqualTo(now), greaterThan(creationDate)));
     }
 }
