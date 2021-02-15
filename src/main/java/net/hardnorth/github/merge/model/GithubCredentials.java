@@ -6,6 +6,7 @@ public class GithubCredentials {
 
     private final String token;
 
+    @SuppressWarnings("CdiInjectionPointsInspection")
     public GithubCredentials(String clientId, String clientToken){
         id = clientId;
         token = clientToken;
