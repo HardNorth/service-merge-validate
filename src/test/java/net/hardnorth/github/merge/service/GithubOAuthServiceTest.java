@@ -5,11 +5,16 @@ import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.gson.JsonObject;
+import io.quarkus.security.AuthenticationFailedException;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.impl.GithubOAuthService;
+import net.hardnorth.github.merge.utils.KeyType;
 import net.hardnorth.github.merge.utils.Keys;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -183,5 +188,52 @@ public class GithubOAuthServiceTest {
 
         assertThat(entity.getTimestamp("accessDate").toDate(), allOf(greaterThan(minuteAgo),
                 lessThanOrEqualTo(now), greaterThan(creationDate)));
+    }
+
+
+    @Test
+    public void verify_authentication_failure_invalid_token_format() throws IOException, InterruptedException {
+        String urlStr = service.createIntegration();
+        Map<String, String> urlQuery = parseQuery(urlStr);
+        String authToken = stripAuthToken(urlQuery.get("redirect_uri"));
+        String state = urlQuery.get("state");
+
+        Pair<String, String> tokens = mockAuthorization(state);
+
+        service.authorize(authToken, tokens.getKey(), state);
+
+        when(encryptionService.decrypt(any(), any())).thenReturn(tokens.getValue().getBytes(StandardCharsets.UTF_8));
+
+        Thread.sleep(20);
+
+        IllegalArgumentException t = Assertions.assertThrows(IllegalArgumentException.class,
+                () -> service.authenticate(UUID.randomUUID().toString()));
+        assertThat(t.getMessage(), equalTo("Invalid token"));
+    }
+
+    private static String[] randomTokens() {
+        return new String[]{Keys.encodeAuthToken(KeyType.STRING, Keys.getBytes(UUID.randomUUID()), Keys.getBytes(UUID.randomUUID())),
+                Keys.encodeAuthToken(KeyType.LONG, Keys.getKeyBytes(new Random().nextLong()), Keys.getBytes(UUID.randomUUID()))};
+    }
+
+    @ParameterizedTest
+    @MethodSource("randomTokens")
+    public void verify_authentication_failure_no_such_token(String token) throws IOException, InterruptedException {
+        String urlStr = service.createIntegration();
+        Map<String, String> urlQuery = parseQuery(urlStr);
+        String authToken = stripAuthToken(urlQuery.get("redirect_uri"));
+        String state = urlQuery.get("state");
+
+        Pair<String, String> tokens = mockAuthorization(state);
+
+        service.authorize(authToken, tokens.getKey(), state);
+
+        when(encryptionService.decrypt(any(), any())).thenReturn(tokens.getValue().getBytes(StandardCharsets.UTF_8));
+
+        Thread.sleep(20);
+
+        AuthenticationFailedException t = Assertions.assertThrows(AuthenticationFailedException.class,
+                () -> service.authenticate(token));
+        assertThat(t.getMessage(), equalTo("Invalid authentication token"));
     }
 }
