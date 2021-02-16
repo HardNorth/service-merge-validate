@@ -1,7 +1,6 @@
 package net.hardnorth.github.merge.api;
 
-import io.quarkus.security.AuthenticationFailedException;
-import net.hardnorth.github.merge.service.impl.MergeValidateService;
+import net.hardnorth.github.merge.service.MergeValidate;
 import net.hardnorth.github.merge.service.OAuthService;
 import net.hardnorth.github.merge.utils.WebServiceCommon;
 import org.apache.http.HttpHeaders;
@@ -10,18 +9,15 @@ import org.apache.http.HttpStatus;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import java.nio.charset.StandardCharsets;
-
-import static java.util.Optional.ofNullable;
 
 @Path("/")
 public class MergeValidateController {
     private final OAuthService authService;
-    private final MergeValidateService mergeService;
+    private final MergeValidate mergeService;
 
     @SuppressWarnings("CdiInjectionPointsInspection")
-    public MergeValidateController(OAuthService authorizationService, MergeValidateService mergeValidateService) {
+    public MergeValidateController(OAuthService authorizationService, MergeValidate mergeValidateService) {
         authService = authorizationService;
         mergeService = mergeValidateService;
     }
@@ -58,11 +54,10 @@ public class MergeValidateController {
     @Path("merge")
     @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.WILDCARD)
-    public void merge(@HeaderParam(value = "Authorization") String auth, @QueryParam("repoUrl") String repoUrl,
+    public void merge(@HeaderParam(value = "Authorization") String auth, @QueryParam("repoRef") String repoRef,
                       @QueryParam("from") String from, @QueryParam("to") String to) {
-        String authToken = ofNullable(WebServiceCommon.getAuthToken(auth)).orElseThrow(() -> new IllegalArgumentException(
-                "Unable to extract Authentication Token from header"));
-        String githubToken = ofNullable(authService.authenticate(authToken)).orElseThrow(AuthenticationFailedException::new);
-        // TODO: implement
+        String authToken = WebServiceCommon.getAuthToken(auth);
+        String githubToken = authService.authenticate(authToken);
+        mergeService.merge(githubToken, repoRef, from, to);
     }
 }

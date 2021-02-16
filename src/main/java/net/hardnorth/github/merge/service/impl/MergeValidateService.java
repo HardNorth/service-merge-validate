@@ -1,13 +1,18 @@
 package net.hardnorth.github.merge.service.impl;
 
-import com.google.cloud.datastore.Datastore;
+import net.hardnorth.github.merge.service.GithubApiClient;
+import net.hardnorth.github.merge.service.MergeValidate;
 
-public class MergeValidateService {
+public class MergeValidateService implements MergeValidate {
 
-    private final Datastore datastore;
+    private final GithubApiClient client;
 
-    public MergeValidateService(Datastore datastoreService) {
-        datastore = datastoreService;
+    public MergeValidateService(GithubApiClient githubClient) {
+        client = githubClient;
     }
 
+    @Override
+    public void merge(String authToken, String repo, String from, String to) {
+
+    }
 }

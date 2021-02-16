@@ -12,7 +12,7 @@ import io.quarkus.security.UnauthorizedException;
 import net.hardnorth.github.merge.exception.ConnectionException;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.EncryptionService;
-import net.hardnorth.github.merge.service.GithubClient;
+import net.hardnorth.github.merge.service.GithubAuthClient;
 import net.hardnorth.github.merge.service.OAuthService;
 import net.hardnorth.github.merge.utils.KeyType;
 import net.hardnorth.github.merge.utils.Keys;
@@ -25,6 +25,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import retrofit2.Response;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -55,7 +56,7 @@ public class GithubOAuthService implements OAuthService {
     private static final String ACCESS_TOKEN_TYPE = "token_type";
 
     private final Datastore datastore;
-    private final GithubClient github;
+    private final GithubAuthClient github;
     private final EncryptionService encryption;
     private final KeyFactory authorizationKeyFactory;
     private final KeyFactory integrationKeyFactory;
@@ -66,7 +67,7 @@ public class GithubOAuthService implements OAuthService {
 
 
     @SuppressWarnings("CdiInjectionPointsInspection")
-    public GithubOAuthService(Datastore datastoreService, GithubClient githubApi, EncryptionService encryptedService,
+    public GithubOAuthService(Datastore datastoreService, GithubAuthClient githubApi, EncryptionService encryptedService,
                               String serviceUrl, GithubCredentials githubCredentials) {
         datastore = datastoreService;
         github = githubApi;
@@ -79,7 +80,7 @@ public class GithubOAuthService implements OAuthService {
 
     @Override
     @Nonnull
-    public String authenticate(@Nonnull String authToken) {
+    public String authenticate(@Nullable String authToken) {
         Triple<KeyType, byte[], byte[]> bareToken = decodeAuthToken(authToken);
         Key authKey = bareToken.getLeft() == KeyType.LONG ?
                 integrationKeyFactory.newKey(new BigInteger(bareToken.getMiddle()).longValue()) :

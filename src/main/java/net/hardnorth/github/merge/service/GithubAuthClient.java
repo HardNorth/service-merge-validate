@@ -10,7 +10,7 @@ import retrofit2.http.POST;
 
 import javax.ws.rs.core.MediaType;
 
-public interface GithubClient {
+public interface GithubAuthClient {
 
     @POST("login/oauth/access_token")
     @FormUrlEncoded

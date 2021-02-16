@@ -4,9 +4,7 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import net.hardnorth.github.merge.config.PropertyNames;
 import net.hardnorth.github.merge.model.GithubCredentials;
-import net.hardnorth.github.merge.service.EncryptionService;
-import net.hardnorth.github.merge.service.GithubClient;
-import net.hardnorth.github.merge.service.SecretManager;
+import net.hardnorth.github.merge.service.*;
 import net.hardnorth.github.merge.service.impl.GithubOAuthService;
 import net.hardnorth.github.merge.service.impl.GoogleSecretManager;
 import net.hardnorth.github.merge.service.impl.MergeValidateService;
@@ -35,7 +33,7 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public GithubOAuthService authorizationService(Datastore datastore, GithubClient githubApi, EncryptionService encryptionService,
+    public GithubOAuthService authorizationService(Datastore datastore, GithubAuthClient githubApi, EncryptionService encryptionService,
                                                    @ConfigProperty(name = PropertyNames.APPLICATION_URL) String serviceUrl,
                                                    @ConfigProperty(name = PropertyNames.GITHUB_AUTHORIZE_URL) String githubOAuthUrl,
                                                    GithubCredentials credentials) {
@@ -48,27 +46,45 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public MergeValidateService mergeValidateService(Datastore datastore) {
-        return new MergeValidateService(datastore);
+    public MergeValidate mergeValidateService(GithubApiClient client) {
+        return new MergeValidateService(client);
     }
 
     @Produces
     @ApplicationScoped
-    public GithubClient githubClientApi(@ConfigProperty(name = PropertyNames.GITHUB_BASE_URL) String githubUrl,
-                                        @ConfigProperty(name = PropertyNames.GITHUB_TIMEOUT_UNIT) TimeUnit timeoutUnit,
-                                        @ConfigProperty(name = PropertyNames.GITHUB_TIMEOUT_VALUE) long timeoutValue) {
-        OkHttpClient client = new OkHttpClient.Builder()
+    public OkHttpClient httpClient(@ConfigProperty(name = PropertyNames.GITHUB_TIMEOUT_UNIT) TimeUnit timeoutUnit,
+                                   @ConfigProperty(name = PropertyNames.GITHUB_TIMEOUT_VALUE) long timeoutValue) {
+        return new OkHttpClient.Builder()
                 .connectTimeout(timeoutValue, timeoutUnit)
                 .readTimeout(timeoutValue, timeoutUnit)
                 .writeTimeout(timeoutValue, timeoutUnit)
                 .build();
+    }
+
+    @Produces
+    @ApplicationScoped
+    public GithubAuthClient githubAuthClient(@ConfigProperty(name = PropertyNames.GITHUB_BASE_URL) String githubUrl,
+                                             OkHttpClient client) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(githubUrl)
                 .client(client)
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        return retrofit.create(GithubClient.class);
+        return retrofit.create(GithubAuthClient.class);
+    }
+
+    @Produces
+    @ApplicationScoped
+    public GithubApiClient githubApiClient(@ConfigProperty(name = PropertyNames.GITHUB_API_URL) String githubUrl,
+                                           OkHttpClient client) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(githubUrl)
+                .client(client)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        return retrofit.create(GithubApiClient.class);
     }
 
     @Produces

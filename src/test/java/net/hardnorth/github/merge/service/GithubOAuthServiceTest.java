@@ -46,7 +46,7 @@ public class GithubOAuthServiceTest {
     private static final byte[] ENCRYPTED_TOKEN = new byte[]{0, 0, 0};
     private static final String ENCRYPTED_TOKEN_BASE64 = Base64.getUrlEncoder().withoutPadding().encodeToString(ENCRYPTED_TOKEN);
 
-    private final GithubClient github = mock(GithubClient.class);
+    private final GithubAuthClient github = mock(GithubAuthClient.class);
     private final EncryptionService encryptionService = mock(EncryptionService.class);
 
     private final Datastore datastore = DatastoreOptions.newBuilder().setNamespace(APPLICATION_NAME).build().getService();
