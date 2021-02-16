@@ -1,11 +1,12 @@
 package net.hardnorth.github.merge.service;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public interface OAuthService {
 
     @Nonnull
-    String authenticate(String authToken);
+    String authenticate(@Nullable String authToken);
 
     @Nonnull
     String createIntegration();
