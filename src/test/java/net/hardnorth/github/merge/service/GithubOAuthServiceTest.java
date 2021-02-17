@@ -6,6 +6,7 @@ import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.gson.JsonObject;
 import io.quarkus.security.AuthenticationFailedException;
+import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.impl.GithubOAuthService;
 import net.hardnorth.github.merge.utils.KeyType;
@@ -42,6 +43,7 @@ public class GithubOAuthServiceTest {
     public static final String APPLICATION_NAME = "test-application";
     public static final String CLIENT_ID = "test-client-id";
     public static final String CLIENT_SECRET = "test-client-secret";
+    private static final Charset CHARSET = new Charset(StandardCharsets.UTF_8);
 
     private static final byte[] ENCRYPTED_TOKEN = new byte[]{0, 0, 0};
     private static final String ENCRYPTED_TOKEN_BASE64 = Base64.getUrlEncoder().withoutPadding().encodeToString(ENCRYPTED_TOKEN);
@@ -51,11 +53,11 @@ public class GithubOAuthServiceTest {
 
     private final Datastore datastore = DatastoreOptions.newBuilder().setNamespace(APPLICATION_NAME).build().getService();
     private final GithubOAuthService service = new GithubOAuthService(datastore, github, encryptionService, SERVICE_URL,
-            new GithubCredentials(CLIENT_ID, CLIENT_SECRET));
+            new GithubCredentials(CLIENT_ID, CLIENT_SECRET), CHARSET);
 
     private static Map<String, String> parseQuery(String url) throws MalformedURLException {
         return Arrays.stream(new URL(url).getQuery().split("&"))
-                .collect(Collectors.toMap(s -> s.split("=")[0], s -> URLDecoder.decode(s.split("=")[1], StandardCharsets.UTF_8)));
+                .collect(Collectors.toMap(s -> s.split("=")[0], s -> URLDecoder.decode(s.split("=")[1], CHARSET.getValue())));
     }
 
     @Test
@@ -134,7 +136,7 @@ public class GithubOAuthServiceTest {
         ArgumentCaptor<byte[]> captor = ArgumentCaptor.forClass(byte[].class);
         verify(encryptionService).encrypt(captor.capture(), any());
         List<byte[]> encryptionValues = captor.getAllValues();
-        assertThat(encryptionValues.get(0), equalTo(("bearer" + " " + tokens.getValue()).getBytes(StandardCharsets.UTF_8)));
+        assertThat(encryptionValues.get(0), equalTo(("bearer" + " " + tokens.getValue()).getBytes(CHARSET.getValue())));
 
         Key key = datastore.newKeyFactory().setKind("integrations")
                 .newKey(new BigInteger(Keys.decodeAuthToken(userAccessToken).getMiddle()).longValue());
@@ -169,7 +171,7 @@ public class GithubOAuthServiceTest {
 
         String userAccessToken = service.authorize(authToken, tokens.getKey(), state);
 
-        when(encryptionService.decrypt(any(), any())).thenReturn(tokens.getValue().getBytes(StandardCharsets.UTF_8));
+        when(encryptionService.decrypt(any(), any())).thenReturn(tokens.getValue().getBytes(CHARSET.getValue()));
 
         Thread.sleep(20);
 
@@ -202,7 +204,7 @@ public class GithubOAuthServiceTest {
 
         service.authorize(authToken, tokens.getKey(), state);
 
-        when(encryptionService.decrypt(any(), any())).thenReturn(tokens.getValue().getBytes(StandardCharsets.UTF_8));
+        when(encryptionService.decrypt(any(), any())).thenReturn(tokens.getValue().getBytes(CHARSET.getValue()));
 
         Thread.sleep(20);
 
@@ -213,7 +215,7 @@ public class GithubOAuthServiceTest {
 
     private static String[] randomTokens() {
         return new String[]{Keys.encodeAuthToken(KeyType.STRING, Keys.getBytes(UUID.randomUUID()), Keys.getBytes(UUID.randomUUID())),
-                Keys.encodeAuthToken(KeyType.LONG, Keys.getKeyBytes(new Random().nextLong()), Keys.getBytes(UUID.randomUUID()))};
+                Keys.encodeAuthToken(KeyType.LONG, Keys.getKeyBytes(new Random().nextLong(), CHARSET.getValue()), Keys.getBytes(UUID.randomUUID()))};
     }
 
     @ParameterizedTest
@@ -228,7 +230,7 @@ public class GithubOAuthServiceTest {
 
         service.authorize(authToken, tokens.getKey(), state);
 
-        when(encryptionService.decrypt(any(), any())).thenReturn(tokens.getValue().getBytes(StandardCharsets.UTF_8));
+        when(encryptionService.decrypt(any(), any())).thenReturn(tokens.getValue().getBytes(CHARSET.getValue()));
 
         Thread.sleep(20);
 

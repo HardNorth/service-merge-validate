@@ -8,7 +8,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
-import java.util.logging.Logger;
 
 import static net.hardnorth.github.merge.utils.ExceptionUtils.getExceptionResponse;
 

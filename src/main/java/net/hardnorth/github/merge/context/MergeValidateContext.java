@@ -3,6 +3,7 @@ package net.hardnorth.github.merge.context;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import net.hardnorth.github.merge.config.PropertyNames;
+import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.*;
 import net.hardnorth.github.merge.service.impl.GithubOAuthService;
@@ -36,8 +37,8 @@ public class MergeValidateContext {
     public GithubOAuthService authorizationService(Datastore datastore, GithubAuthClient githubApi, EncryptionService encryptionService,
                                                    @ConfigProperty(name = PropertyNames.APPLICATION_URL) String serviceUrl,
                                                    @ConfigProperty(name = PropertyNames.GITHUB_AUTHORIZE_URL) String githubOAuthUrl,
-                                                   GithubCredentials credentials) {
-        GithubOAuthService service = new GithubOAuthService(datastore, githubApi, encryptionService, serviceUrl, credentials);
+                                                   GithubCredentials credentials, Charset charset) {
+        GithubOAuthService service = new GithubOAuthService(datastore, githubApi, encryptionService, serviceUrl, credentials, charset);
         if (isNotBlank(githubOAuthUrl)) {
             service.setGithubOAuthUrl(githubOAuthUrl);
         }
@@ -46,8 +47,10 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public MergeValidate mergeValidateService(GithubApiClient client) {
-        return new MergeValidateService(client);
+    public MergeValidate mergeValidateService(GithubApiClient client,
+                                              @ConfigProperty(name = PropertyNames.APPLICATION_NAME) String applicationName,
+                                              Charset charset) {
+        return new MergeValidateService(client, "." + applicationName, charset);
     }
 
     @Produces
@@ -108,5 +111,11 @@ public class MergeValidateContext {
                                                    @ConfigProperty(name = PropertyNames.GITHUB_ENCRYPTION_KEY_SECRET) String keyName)
             throws GeneralSecurityException {
         return new TinkEncryptionService(secretManager, keyName);
+    }
+
+    @Produces
+    @ApplicationScoped
+    public Charset applicationCharset(@ConfigProperty(name = PropertyNames.CHARSET) String charsetName) {
+        return new Charset(java.nio.charset.Charset.forName(charsetName));
     }
 }

@@ -1,5 +1,6 @@
 package net.hardnorth.github.merge.utils;
 
+import net.hardnorth.github.merge.model.Token;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.jupiter.api.Assertions;
@@ -38,18 +39,18 @@ public class KeysTest {
         String encodedToken = Keys.encodeAuthToken(type, keyBytes, tokenBytes);
         assertThat(encodedToken.length(), greaterThan(0));
 
-        Triple<KeyType, byte[], byte[]> decodedToken = Keys.decodeAuthToken(encodedToken);
+        Triple<KeyType, byte[], Token> decodedToken = Keys.decodeAuthToken(encodedToken);
 
         assertThat(decodedToken.getLeft(), sameInstance(type));
         assertThat(new BigInteger(decodedToken.getMiddle()).longValue(), equalTo(key));
 
-        String tokenBytesResult = Hex.encodeHexString(decodedToken.getRight());
+        String tokenBytesResult = Hex.encodeHexString(decodedToken.getRight().getValue());
         assertThat(tokenBytesResult, equalTo(token.toString().replace("-", "")));
     }
 
     private static String[] invalidTokens() {
         return new String[]{"333", null, "AAcSSY81", "AAcSSY81gAAA", "AAcSSY81gAAAj", "AAcSSY81gAAAj%", "AAcSSY81gAAAj&",
-        "https://github.com/login/oauth/authorize?redirect_uri=http%3A%2F%2Flocalhost%3A8889%2Fintegration%2Fresult%2FAAcWat81gAAAeEg2ziDZSPK6Ff5jmxKN7A&client_id=test-client-id&scope=repo+user%3Aemail&state=51018ada-32c5-4635-956b-bd2304dba1d4"};
+                "https://github.com/login/oauth/authorize?redirect_uri=http%3A%2F%2Flocalhost%3A8889%2Fintegration%2Fresult%2FAAcWat81gAAAeEg2ziDZSPK6Ff5jmxKN7A&client_id=test-client-id&scope=repo+user%3Aemail&state=51018ada-32c5-4635-956b-bd2304dba1d4"};
     }
 
     @ParameterizedTest
@@ -62,10 +63,10 @@ public class KeysTest {
     @Test
     public void verify_minimal_token_decode() {
         String oneByteToken = "AAcSSY81gAAAjo";
-        Triple<KeyType, byte[], byte[]> decodedToken = Keys.decodeAuthToken(oneByteToken);
+        Triple<KeyType, byte[], Token> decodedToken = Keys.decodeAuthToken(oneByteToken);
 
         assertThat(decodedToken.getLeft(), sameInstance(KeyType.LONG));
         assertThat(new BigInteger(decodedToken.getMiddle()).longValue(), equalTo(5147429007523840L));
-        assertThat(Hex.encodeHexString(decodedToken.getRight()), equalTo("8e"));
+        assertThat(Hex.encodeHexString(decodedToken.getRight().getValue()), equalTo("8e"));
     }
 }

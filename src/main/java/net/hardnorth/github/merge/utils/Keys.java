@@ -1,5 +1,6 @@
 package net.hardnorth.github.merge.utils;
 
+import net.hardnorth.github.merge.model.Token;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.tuple.Triple;
@@ -7,7 +8,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -25,12 +26,12 @@ public class Keys {
     }
 
     @Nonnull
-    public static byte[] getKeyBytes(@Nonnull Object keyValue) {
+    public static byte[] getKeyBytes(@Nonnull Object keyValue, Charset charset) {
         if (keyValue instanceof Number) {
             return BigInteger.valueOf(((Number) keyValue).longValue()).toByteArray();
         } else {
             String authKeyValueStr = keyValue.toString();
-            return authKeyValueStr.getBytes(StandardCharsets.UTF_8);
+            return authKeyValueStr.getBytes(charset);
         }
     }
 
@@ -60,7 +61,7 @@ public class Keys {
     }
 
     @Nonnull
-    public static Triple<KeyType, byte[], byte[]> decodeAuthToken(@Nullable String token) {
+    public static Triple<KeyType, byte[], Token> decodeAuthToken(@Nullable String token) {
         if (token == null) {
             throw INVALID_TOKEN;
         }
@@ -79,8 +80,8 @@ public class Keys {
         }
         byte[] keyBytes = new byte[tokenBytes[1]];
         System.arraycopy(tokenBytes, 2, keyBytes, 0, keyBytes.length);
-        byte[] authUuidBytes = new byte[tokenBytes.length - 2 - keyBytes.length];
-        System.arraycopy(tokenBytes, 2 + keyBytes.length, authUuidBytes, 0, authUuidBytes.length);
-        return Triple.of(type, keyBytes, authUuidBytes);
+        byte[] authTokenBytes = new byte[tokenBytes.length - 2 - keyBytes.length];
+        System.arraycopy(tokenBytes, 2 + keyBytes.length, authTokenBytes, 0, authTokenBytes.length);
+        return Triple.of(type, keyBytes, new Token(authTokenBytes));
     }
 }

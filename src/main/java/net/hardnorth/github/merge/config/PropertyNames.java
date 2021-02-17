@@ -6,8 +6,9 @@ public class PropertyNames {
     }
 
     public static final String APPLICATION_NAME = "net.hardnorth.application.name";
-    public static final String APPLICATION_URL = "net.hardnorth.github.merge.url";
+    public static final String APPLICATION_URL = "net.hardnorth.application.url";
     public static final String PROJECT_ID = "net.hardnorth.application.project";
+    public static final String CHARSET = "net.hardnorth.application.charset";
 
     // Github
     public static final String GITHUB_BASE_URL = "net.hardnorth.github.root.url";
