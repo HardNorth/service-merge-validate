@@ -45,5 +45,6 @@ public class MergeValidateService implements MergeValidate {
         String mergeFileContent =
                 new String(Base64.getDecoder().decode(mergeFileInfo.getAsJsonPrimitive(CONTENT_FIELD).getAsString()), charset);
 
+
     }
 }
