@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("CdiInjectionPointsInspection")
-public class ValidationPattern implements Predicate<Path>{
+public class ValidationPattern implements Predicate<Path> {
 
     private static class Rule implements Predicate<Path> {
 
@@ -20,9 +20,13 @@ public class ValidationPattern implements Predicate<Path>{
         private final RuleType type;
         private final PathMatcher matcher;
 
+        private static String normalizePattern(String pattern) {
+            return pattern.startsWith("./") ? pattern.substring(2) : pattern;
+        }
+
         public Rule(RuleType ruleType, String rulePattern) {
             type = ruleType;
-            matcher = FileSystems.getDefault().getPathMatcher("glob:" + rulePattern);
+            matcher = FileSystems.getDefault().getPathMatcher("glob:" + normalizePattern(rulePattern));
         }
 
         public boolean test(Path filePath) {
@@ -39,12 +43,8 @@ public class ValidationPattern implements Predicate<Path>{
     public boolean test(Path path) {
         List<Rule> matchedRules = rules.stream().filter(r -> r.test(path)).collect(Collectors.toList());
         boolean result = false;
-        for (Rule r: matchedRules) {
-            if(Rule.RuleType.INCLUDE == r.type) {
-                result = true;
-            } else {
-                result = false;
-            }
+        for (Rule r : matchedRules) {
+            result = Rule.RuleType.INCLUDE == r.type;
         }
         return result;
     }

@@ -1,6 +1,6 @@
 package net.hardnorth.github.merge.utils;
 
-import javax.validation.constraints.NotNull;
+import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,7 +22,11 @@ public class IoUtils {
      * @param is a stream to read from
      * @return the result
      */
-    public static String readInputStreamToString(@NotNull InputStream is) {
+    @Nullable
+    public static String readInputStreamToString(@Nullable InputStream is) {
+        if(is == null) {
+            return null;
+        }
         byte[] bytes = readInputStreamToBytes(is);
         if (bytes.length <= 0) {
             return "";

@@ -1,2 +1,2 @@
 # A simple pattern to include single file
-./mvnw.cmd
+mvnw.cmd
