@@ -1,0 +1,2 @@
+!**/*.txt
+validation/exclude_all_but_one.txt

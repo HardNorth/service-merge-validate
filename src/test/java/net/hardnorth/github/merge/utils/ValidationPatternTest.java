@@ -20,7 +20,9 @@ public class ValidationPatternTest {
                 new Object[]{"validation/wildcard.txt", "README.md", Boolean.TRUE},
                 new Object[]{"validation/root_dir.txt", "mvnw.cmd", Boolean.TRUE},
                 new Object[]{"validation/all_txt.txt", "validation/all_txt.txt", Boolean.TRUE},
-                new Object[]{"validation/all_but_exclude_one.txt", "validation/all_but_exclude_one.txt", Boolean.FALSE});
+                new Object[]{"validation/all_but_exclude_one.txt", "validation/all_but_exclude_one.txt", Boolean.FALSE},
+                new Object[]{"validation/all_but_exclude_one.txt", "validation/exclude_all_but_one.txt", Boolean.TRUE},
+                new Object[]{"validation/exclude_all_but_one.txt", "validation/exclude_all_but_one.txt", Boolean.TRUE});
     }
 
     @ParameterizedTest
