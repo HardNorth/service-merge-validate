@@ -47,14 +47,6 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public MergeValidate mergeValidateService(GithubApiClient client,
-                                              @ConfigProperty(name = PropertyNames.APPLICATION_NAME) String applicationName,
-                                              Charset charset) {
-        return new MergeValidateService(client, "." + applicationName, charset);
-    }
-
-    @Produces
-    @ApplicationScoped
     public OkHttpClient httpClient(@ConfigProperty(name = PropertyNames.GITHUB_TIMEOUT_UNIT) TimeUnit timeoutUnit,
                                    @ConfigProperty(name = PropertyNames.GITHUB_TIMEOUT_VALUE) long timeoutValue) {
         return new OkHttpClient.Builder()
@@ -88,6 +80,15 @@ public class MergeValidateContext {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         return retrofit.create(GithubApiClient.class);
+    }
+
+    @Produces
+    @ApplicationScoped
+    public MergeValidate mergeValidateService(GithubApiClient client, OkHttpClient httpClient,
+                                              @ConfigProperty(name = PropertyNames.APPLICATION_NAME) String applicationName,
+                                              Charset charset,
+                                              @ConfigProperty(name = PropertyNames.GITHUB_FILE_PAGE_LIMIT) int scanLimit) {
+        return new MergeValidateService(client, httpClient, "." + applicationName, charset, scanLimit);
     }
 
     @Produces

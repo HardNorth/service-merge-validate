@@ -1,5 +1,6 @@
 package net.hardnorth.github.merge.service;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.apache.http.HttpHeaders;
 import retrofit2.Call;
@@ -37,6 +38,6 @@ public interface GithubApiClient {
 
     @GET("repos/{repo}/contents/{path}")
     @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
-    Call<JsonObject> getContent(@Header("Authorization") String auth, @Path("repo") String repo,
-                                @Path("path") String path, @QueryParam("ref") String ref);
+    Call<JsonElement> getContent(@Header("Authorization") String auth, @Path("repo") String repo,
+                                 @Path("path") String path, @QueryParam("ref") String ref);
 }
