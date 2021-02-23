@@ -20,5 +20,6 @@ public class PropertyNames {
     public static final String GITHUB_TIMEOUT_UNIT = "net.hardnorth.github.timeout.unit";
     public static final String GITHUB_TIMEOUT_VALUE = "net.hardnorth.github.timeout.value";
     public static final String GITHUB_FILE_PAGE_LIMIT = "net.hardnorth.github.file.page.limit";
+    public static final String GITHUB_FILE_SIZE_LIMIT = "net.hardnorth.github.file.size.limit";
 
 }

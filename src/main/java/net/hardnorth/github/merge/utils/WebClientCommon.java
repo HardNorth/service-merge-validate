@@ -41,6 +41,27 @@ public class WebClientCommon {
         }
     }
 
+    public static okhttp3.Response executeServiceCall(okhttp3.Call request) {
+        try {
+            okhttp3.Response result = request.execute();
+            if (!result.isSuccessful()) {
+                if (result.code() >= HttpStatus.SC_BAD_REQUEST) {
+                    JsonObject errorResponse = parseErrorBodyIfValid(result.headers(), result.body());
+                    String message = "Downstream service error: " + result.code() + " " + result.message();
+                    if (errorResponse != null) {
+                        throw new RestServiceException(message, result.code(), errorResponse);
+                    } else {
+                        throw new HttpException(message, FAILED_DEPENDENCY);
+                    }
+                }
+                throw new HttpException("Unexpected upstream service response: " + result.code() + " " + result.message(), FAILED_DEPENDENCY);
+            }
+            return result;
+        } catch (IOException e) {
+            throw new ConnectionException(e.getMessage(), e);
+        }
+    }
+
     private static JsonObject parseErrorBodyIfValid(Headers headers, ResponseBody body) {
         if (headers == null || body == null) {
             return null;

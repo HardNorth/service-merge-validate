@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+@SuppressWarnings("CdiInjectionPointsInspection")
 public class MergeValidateContext {
 
     @Produces
@@ -87,8 +88,9 @@ public class MergeValidateContext {
     public MergeValidate mergeValidateService(GithubApiClient client, OkHttpClient httpClient,
                                               @ConfigProperty(name = PropertyNames.APPLICATION_NAME) String applicationName,
                                               Charset charset,
-                                              @ConfigProperty(name = PropertyNames.GITHUB_FILE_PAGE_LIMIT) int scanLimit) {
-        return new MergeValidateService(client, httpClient, "." + applicationName, charset, scanLimit);
+                                              @ConfigProperty(name = PropertyNames.GITHUB_FILE_PAGE_LIMIT) int scanLimit,
+                                              @ConfigProperty(name = PropertyNames.GITHUB_FILE_SIZE_LIMIT) long sizeLimit) {
+        return new MergeValidateService(client, httpClient, "." + applicationName, charset, scanLimit, sizeLimit);
     }
 
     @Produces

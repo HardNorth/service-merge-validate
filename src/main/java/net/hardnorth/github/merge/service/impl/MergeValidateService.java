@@ -1,6 +1,7 @@
 package net.hardnorth.github.merge.service.impl;
 
 import com.google.common.net.HttpHeaders;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -10,19 +11,26 @@ import net.hardnorth.github.merge.service.GithubApiClient;
 import net.hardnorth.github.merge.service.MergeValidate;
 import net.hardnorth.github.merge.utils.WebClientCommon;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.apache.http.HttpStatus;
 import retrofit2.Response;
 
 import javax.annotation.Nonnull;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.util.Optional.ofNullable;
 
 public class MergeValidateService implements MergeValidate {
+
+    private static final Logger LOGGER = Logger.getLogger(MergeValidateService.class.getSimpleName());
 
     private static final RuntimeException UNABLE_TO_GET_CONFIGURATION_EXCEPTION_INVALID_RESPONSE
             = new HttpException("Unable to get merge configuration for target branch: invalid response", HttpStatus.SC_FAILED_DEPENDENCY);
@@ -33,11 +41,20 @@ public class MergeValidateService implements MergeValidate {
     private static final RuntimeException UNABLE_TO_GET_CONFIGURATION_EXCEPTION_NO_FILE
             = new HttpException("Unable to get merge configuration for target branch: no configuration file found", HttpStatus.SC_BAD_REQUEST);
 
+    private static final RuntimeException UNABLE_TO_GET_CONFIGURATION_RESPONSE_IS_NOT_JSON
+            = new HttpException("Unable to get merge configuration for target branch: response is not JSON", HttpStatus.SC_FAILED_DEPENDENCY);
+
+    private static final RuntimeException UNABLE_TO_GET_CONFIGURATION_FILE_TOO_BIG
+            = new HttpException("Unable to get merge configuration for target branch: file size limit exceed", HttpStatus.SC_REQUEST_TOO_LONG);
+
     private static final Pattern LINK_VALUE_PATTERN = Pattern.compile("<([^>]+)>;");
     private static final String DIRECTORY_DELIMITER = "/";
     private static final String TYPE_FIELD = "type";
     private static final String NAME_FIELD = "name";
     private static final String CONTENT_FIELD = "content";
+    private static final String SIZE_FIELD = "size";
+
+    private static final Gson GSON = new Gson();
 
     private final GithubApiClient client;
     private final OkHttpClient http;
@@ -45,15 +62,18 @@ public class MergeValidateService implements MergeValidate {
     private final String mergeFileDirectory;
     private final java.nio.charset.Charset charset;
     private final int scanLimit;
+    private final long sizeLimit;
 
+    @SuppressWarnings("CdiInjectionPointsInspection")
     public MergeValidateService(GithubApiClient githubClient, OkHttpClient httpClient, String mergeFileName,
-                                Charset currentCharset, int fileScanLimit) {
+                                Charset currentCharset, int fileScanLimit, long fileSizeLimit) {
         client = githubClient;
         http = httpClient;
         mergeFile = mergeFileName;
         charset = currentCharset.getValue();
         mergeFileDirectory = mergeFile.contains(DIRECTORY_DELIMITER) ? mergeFile.substring(0, mergeFile.lastIndexOf(DIRECTORY_DELIMITER)) : "";
         scanLimit = fileScanLimit;
+        sizeLimit = fileSizeLimit;
     }
 
     @Nonnull
@@ -63,16 +83,16 @@ public class MergeValidateService implements MergeValidate {
                 .map(l -> {
                     Matcher m = LINK_VALUE_PATTERN.matcher(l);
                     if (m.find()) {
-                        return m.group(1);
+                        return m.group(1).trim();
                     } else {
                         return null;
                     }
                 });
     }
 
-    private JsonObject getMergeFileInfo(String authToken, String repo, String branch) {
+    private JsonObject getMergeFileInfo(String authHeader, String repo, String branch) {
         Response<JsonElement> mergeFileDirectoryInfoRs =
-                WebClientCommon.executeServiceCall(client.getContent(authToken, repo, mergeFileDirectory, branch));
+                WebClientCommon.executeServiceCall(client.getContent(authHeader, repo, mergeFileDirectory, branch));
         JsonElement mergeFileDirectoryInfo = mergeFileDirectoryInfoRs.body();
 
         if (mergeFileDirectoryInfo == null || !mergeFileDirectoryInfo.isJsonArray()) {
@@ -104,9 +124,23 @@ public class MergeValidateService implements MergeValidate {
             if (nextLink.isEmpty()) {
                 break;
             }
+            String link = nextLink.get();
+            okhttp3.Response result = WebClientCommon
+                    .executeServiceCall(http.newCall(new Request.Builder().url(link).addHeader(HttpHeaders.AUTHORIZATION, authHeader).build()));
+            JsonElement resultElement = ofNullable(result.body()).map(b -> {
+                try {
+                    return b.bytes();
+                } catch (IOException e) {
+                    throw UNABLE_TO_GET_CONFIGURATION_RESPONSE_IS_NOT_JSON;
+                }
+            }).map(b -> GSON.fromJson(new InputStreamReader(new ByteArrayInputStream(b)), JsonElement.class))
+                    .orElseThrow(() -> UNABLE_TO_GET_CONFIGURATION_RESPONSE_IS_NOT_JSON);
 
+            if (!resultElement.isJsonArray()) {
+                throw UNABLE_TO_GET_CONFIGURATION_RESPONSE_IS_NOT_JSON;
+            }
+            directory = resultElement.getAsJsonArray();
         } while (i++ < scanLimit);
-
 
         if (i == scanLimit && nextLink.isPresent()) {
             throw UNABLE_TO_GET_CONFIGURATION_EXCEPTION_LIMIT_EXCEED;
@@ -114,22 +148,34 @@ public class MergeValidateService implements MergeValidate {
         throw UNABLE_TO_GET_CONFIGURATION_EXCEPTION_NO_FILE;
     }
 
-    private String getMergeFileContent(String authToken, String repo, String branch) {
+    private String getMergeFileContent(String authHeader, String repo, String branch) {
+        JsonObject mergeFileInfo = getMergeFileInfo(authHeader, repo, branch);
+        if (!mergeFileInfo.has(SIZE_FIELD) || !mergeFileInfo.getAsJsonPrimitive(SIZE_FIELD).isNumber()) {
+            throw UNABLE_TO_GET_CONFIGURATION_RESPONSE_IS_NOT_JSON;
+        }
+        long size = mergeFileInfo.getAsJsonPrimitive(SIZE_FIELD).getAsLong();
 
-        JsonObject mergeFileInfo = getMergeFileInfo(authToken, repo, branch);
-
-        if (!mergeFileInfo.has(TYPE_FIELD) || !mergeFileInfo.getAsJsonPrimitive(TYPE_FIELD).isString()
-                || !"file".equals(mergeFileInfo.getAsJsonPrimitive(TYPE_FIELD).getAsString())
-                || !mergeFileInfo.has(CONTENT_FIELD) || !mergeFileInfo.getAsJsonPrimitive(CONTENT_FIELD).isString()) {
-            throw new IllegalArgumentException("Invalid merge configuration file");
+        if (size > sizeLimit) {
+            throw UNABLE_TO_GET_CONFIGURATION_FILE_TOO_BIG;
         }
 
-        return new String(Base64.getDecoder().decode(mergeFileInfo.getAsJsonPrimitive(CONTENT_FIELD).getAsString()), charset);
+        JsonElement fileElement = WebClientCommon.executeServiceCall(client.getContent(authHeader, repo, mergeFile, branch)).body();
+        if (fileElement == null || !fileElement.isJsonObject()) {
+            throw UNABLE_TO_GET_CONFIGURATION_RESPONSE_IS_NOT_JSON;
+        }
+
+        JsonObject file = fileElement.getAsJsonObject();
+        if (!file.has(CONTENT_FIELD) || !file.get(CONTENT_FIELD).isJsonPrimitive() || !file.getAsJsonPrimitive(CONTENT_FIELD).isString()) {
+            throw UNABLE_TO_GET_CONFIGURATION_RESPONSE_IS_NOT_JSON;
+        }
+
+        return new String(Base64.getDecoder().decode(file.getAsJsonPrimitive(CONTENT_FIELD).getAsString()), charset);
     }
 
     @Override
-    public void merge(String authToken, String repo, String from, String to) {
-        String mergeFileContent = getMergeFileContent(authToken, repo, to);
+    public void merge(String authHeader, String repo, String from, String to) {
+        String mergeFileContent = getMergeFileContent(authHeader, repo, to);
+        LOGGER.finer("Got merge file: " + mergeFileContent);
 
     }
 }
