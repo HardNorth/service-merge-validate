@@ -7,10 +7,11 @@ import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.service.impl.MergeValidateService;
 import net.hardnorth.github.merge.utils.IoUtils;
 import okhttp3.Headers;
-import okhttp3.OkHttpClient;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -28,22 +29,22 @@ public class MergeValidateServiceTest {
     private static final Gson GSON = new Gson();
 
     private final GithubApiClient github = mock(GithubApiClient.class);
-    private final OkHttpClient http = mock(OkHttpClient.class);
 
 
     private final MergeValidate service =
-            new MergeValidateService(github, http, ".merge-validate", new Charset(StandardCharsets.UTF_8), 2, 512000);
+            new MergeValidateService(github, ".merge-validate", new Charset(StandardCharsets.UTF_8), 512000);
 
-    @Test
+    @ParameterizedTest
+    @ValueSource(strings = {"github/file_list_no_merge_file.txt", "github/file_list_no_merge_file_large.txt"})
     @SuppressWarnings("unchecked")
-    public void verify_github_no_merge_file_response() throws IOException {
+    public void verify_github_no_merge_file_response(String file) throws IOException {
         Call<JsonElement> call = mock(Call.class);
         Response<JsonElement> response = mock(Response.class);
         when(call.execute()).thenReturn(response);
         when(response.isSuccessful()).thenReturn(Boolean.TRUE);
         when(github.getContent(anyString(), anyString(), anyString(), eq("dest"))).thenReturn(call);
         when(response.body())
-                .thenReturn(GSON.fromJson(IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream("github/file_list_no_merge_file.txt")), JsonElement.class));
+                .thenReturn(GSON.fromJson(IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream(file)), JsonElement.class));
         when(response.headers()).thenReturn(Headers.of());
 
 

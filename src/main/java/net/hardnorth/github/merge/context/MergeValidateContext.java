@@ -85,12 +85,11 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public MergeValidate mergeValidateService(GithubApiClient client, OkHttpClient httpClient,
+    public MergeValidate mergeValidateService(GithubApiClient client,
                                               @ConfigProperty(name = PropertyNames.APPLICATION_NAME) String applicationName,
                                               Charset charset,
-                                              @ConfigProperty(name = PropertyNames.GITHUB_FILE_PAGE_LIMIT) int scanLimit,
                                               @ConfigProperty(name = PropertyNames.GITHUB_FILE_SIZE_LIMIT) long sizeLimit) {
-        return new MergeValidateService(client, httpClient, "." + applicationName, charset, scanLimit, sizeLimit);
+        return new MergeValidateService(client, "." + applicationName, charset, sizeLimit);
     }
 
     @Produces
