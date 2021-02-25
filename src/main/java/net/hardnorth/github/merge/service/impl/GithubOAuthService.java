@@ -5,26 +5,21 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.KeyFactory;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.UnauthorizedException;
-import net.hardnorth.github.merge.exception.ConnectionException;
 import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.model.Token;
 import net.hardnorth.github.merge.service.EncryptionService;
-import net.hardnorth.github.merge.service.GithubAuthClient;
+import net.hardnorth.github.merge.service.Github;
 import net.hardnorth.github.merge.service.OAuthService;
 import net.hardnorth.github.merge.utils.KeyType;
 import net.hardnorth.github.merge.utils.Keys;
-import net.hardnorth.github.merge.utils.WebClientCommon;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.http.client.utils.URIBuilder;
 import org.springframework.security.crypto.bcrypt.BCrypt;
-import retrofit2.Response;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -39,7 +34,7 @@ public class GithubOAuthService implements OAuthService {
 
     public static final RuntimeException AUTHORIZATION_EXCEPTION = new UnauthorizedException("Unable to validate your request: invalid authentication token or state, or your authorization already expired");
     public static final RuntimeException AUTHENTICATION_EXCEPTION = new AuthenticationFailedException("Invalid authentication token");
-    public static final RuntimeException INVALID_API_RESPONSE = new ConnectionException("Invalid response from Github API");
+
     public static final String DEFAULT_GITHUB_OAUTH_URL = "https://github.com/login/oauth/authorize";
     public static final List<String> SCOPES = Arrays.asList("repo", "user:email");
 
@@ -52,11 +47,9 @@ public class GithubOAuthService implements OAuthService {
     private static final String INTEGRATION_DATA = "data";
     private static final String CREATION_DATE = "creationDate";
     private static final String ACCESS_DATE = "accessDate";
-    private static final String ACCESS_TOKEN = "access_token";
-    private static final String ACCESS_TOKEN_TYPE = "token_type";
 
     private final Datastore datastore;
-    private final GithubAuthClient github;
+    private final Github github;
     private final EncryptionService encryption;
     private final KeyFactory authorizationKeyFactory;
     private final KeyFactory integrationKeyFactory;
@@ -68,7 +61,7 @@ public class GithubOAuthService implements OAuthService {
 
 
     @SuppressWarnings("CdiInjectionPointsInspection")
-    public GithubOAuthService(Datastore datastoreService, GithubAuthClient githubApi, EncryptionService encryptedService,
+    public GithubOAuthService(Datastore datastoreService, Github githubApi, EncryptionService encryptedService,
                               String serviceUrl, GithubCredentials githubCredentials, Charset currentCharset) {
         datastore = datastoreService;
         github = githubApi;
@@ -166,25 +159,8 @@ public class GithubOAuthService implements OAuthService {
             // Cleanup temporary authorization data
             datastore.delete(authKey);
         }
-
-        // Authorize
-        Response<JsonObject> rs = WebClientCommon.executeServiceCall(github.loginApplication(credentials.getId(),
-                credentials.getToken(), code, state, null));
-        if (rs.body() == null) {
-            throw new ConnectionException("Unable to connect to Github API");
-        }
-        JsonObject body = rs.body();
-        if (!body.has(ACCESS_TOKEN) || !body.has(ACCESS_TOKEN_TYPE)) {
-            throw INVALID_API_RESPONSE;
-        }
-        JsonElement tokenObject = body.get(ACCESS_TOKEN);
-        JsonElement tokenTypeObject = body.get(ACCESS_TOKEN_TYPE);
-        if (tokenObject.isJsonNull() || tokenTypeObject.isJsonNull()) {
-            throw INVALID_API_RESPONSE;
-        }
-        String githubToken = tokenObject.getAsString();
-        String tokenType = tokenTypeObject.getAsString();
-        String githubAuthenticationStr = tokenType + " " + githubToken;
+        Pair<String, String> token = github.loginApplication(code, state);
+        String githubAuthenticationStr = token.getKey() + " " + token.getValue();
 
         // Generate new authentication data
         Pair<Token, String> userTokenHash = generateAuthToken();

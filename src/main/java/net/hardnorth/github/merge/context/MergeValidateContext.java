@@ -6,10 +6,7 @@ import net.hardnorth.github.merge.config.PropertyNames;
 import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.*;
-import net.hardnorth.github.merge.service.impl.GithubOAuthService;
-import net.hardnorth.github.merge.service.impl.GoogleSecretManager;
-import net.hardnorth.github.merge.service.impl.MergeValidateService;
-import net.hardnorth.github.merge.service.impl.TinkEncryptionService;
+import net.hardnorth.github.merge.service.impl.*;
 import okhttp3.OkHttpClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import retrofit2.Retrofit;
@@ -26,25 +23,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @SuppressWarnings("CdiInjectionPointsInspection")
 public class MergeValidateContext {
-
-    @Produces
-    @ApplicationScoped
-    public Datastore datastoreService(@ConfigProperty(name = PropertyNames.APPLICATION_NAME) String applicationName) {
-        return DatastoreOptions.newBuilder().setNamespace(applicationName).build().getService();
-    }
-
-    @Produces
-    @ApplicationScoped
-    public GithubOAuthService authorizationService(Datastore datastore, GithubAuthClient githubApi, EncryptionService encryptionService,
-                                                   @ConfigProperty(name = PropertyNames.APPLICATION_URL) String serviceUrl,
-                                                   @ConfigProperty(name = PropertyNames.GITHUB_AUTHORIZE_URL) String githubOAuthUrl,
-                                                   GithubCredentials credentials, Charset charset) {
-        GithubOAuthService service = new GithubOAuthService(datastore, githubApi, encryptionService, serviceUrl, credentials, charset);
-        if (isNotBlank(githubOAuthUrl)) {
-            service.setGithubOAuthUrl(githubOAuthUrl);
-        }
-        return service;
-    }
 
     @Produces
     @ApplicationScoped
@@ -85,15 +63,6 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public MergeValidate mergeValidateService(GithubApiClient client,
-                                              @ConfigProperty(name = PropertyNames.APPLICATION_NAME) String applicationName,
-                                              Charset charset,
-                                              @ConfigProperty(name = PropertyNames.GITHUB_FILE_SIZE_LIMIT) long sizeLimit) {
-        return new MergeValidateService(client, "." + applicationName, charset, sizeLimit);
-    }
-
-    @Produces
-    @ApplicationScoped
     public SecretManager googleSecretManager(@ConfigProperty(name = PropertyNames.PROJECT_ID) String projectId) {
         return new GoogleSecretManager(projectId);
     }
@@ -109,15 +78,49 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public EncryptionService tinkEncryptionService(SecretManager secretManager,
-                                                   @ConfigProperty(name = PropertyNames.GITHUB_ENCRYPTION_KEY_SECRET) String keyName)
-            throws GeneralSecurityException {
-        return new TinkEncryptionService(secretManager, keyName);
+    public Charset applicationCharset(@ConfigProperty(name = PropertyNames.CHARSET) String charsetName) {
+        return new Charset(java.nio.charset.Charset.forName(charsetName));
     }
 
     @Produces
     @ApplicationScoped
-    public Charset applicationCharset(@ConfigProperty(name = PropertyNames.CHARSET) String charsetName) {
-        return new Charset(java.nio.charset.Charset.forName(charsetName));
+    public Github githubService(OkHttpClient httpClient, GithubAuthClient authClient, GithubApiClient apiClient,
+                                GithubCredentials githubCredentials, Charset currentCharset,
+                                @ConfigProperty(name = PropertyNames.GITHUB_FILE_SIZE_LIMIT) long sizeLimit) {
+        return new GithubService(httpClient, authClient, apiClient, githubCredentials, sizeLimit);
+    }
+
+    @Produces
+    @ApplicationScoped
+    public Datastore datastoreService(@ConfigProperty(name = PropertyNames.APPLICATION_NAME) String applicationName) {
+        return DatastoreOptions.newBuilder().setNamespace(applicationName).build().getService();
+    }
+
+    @Produces
+    @ApplicationScoped
+    public GithubOAuthService authorizationService(Datastore datastore, Github githubApi, EncryptionService encryptionService,
+                                                   @ConfigProperty(name = PropertyNames.APPLICATION_URL) String serviceUrl,
+                                                   @ConfigProperty(name = PropertyNames.GITHUB_AUTHORIZE_URL) String githubOAuthUrl,
+                                                   GithubCredentials credentials, Charset charset) {
+        GithubOAuthService service = new GithubOAuthService(datastore, githubApi, encryptionService, serviceUrl, credentials, charset);
+        if (isNotBlank(githubOAuthUrl)) {
+            service.setGithubOAuthUrl(githubOAuthUrl);
+        }
+        return service;
+    }
+
+    @Produces
+    @ApplicationScoped
+    public MergeValidate mergeValidateService(Github client, Charset charset,
+                                              @ConfigProperty(name = PropertyNames.APPLICATION_NAME) String applicationName) {
+        return new MergeValidateService(client, "." + applicationName, charset);
+    }
+
+    @Produces
+    @ApplicationScoped
+    public EncryptionService tinkEncryptionService(SecretManager secretManager,
+                                                   @ConfigProperty(name = PropertyNames.GITHUB_ENCRYPTION_KEY_SECRET) String keyName)
+            throws GeneralSecurityException {
+        return new TinkEncryptionService(secretManager, keyName);
     }
 }

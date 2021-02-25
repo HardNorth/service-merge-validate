@@ -1,0 +1,4 @@
+./CHANGELOG.md
+./README.md
+README_TEMPLATE.md
+gradle.properties
