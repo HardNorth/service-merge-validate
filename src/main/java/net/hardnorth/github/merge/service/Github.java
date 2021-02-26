@@ -1,12 +1,23 @@
 package net.hardnorth.github.merge.service;
 
-import org.apache.commons.lang3.tuple.Pair;
+import net.hardnorth.github.merge.model.Change;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.List;
 
 public interface Github {
     @Nonnull
-    Pair<String, String> loginApplication(String code, String state);
+    String loginApplication(@Nullable String code, @Nullable String state);
+
     @Nonnull
-    byte[] getFileContent(String authHeader, String repo, String branch, String filePath);
+    byte[] getFileContent(@Nullable String authHeader, @Nullable String repo, @Nullable String branch,
+                          @Nonnull String filePath);
+
+    @Nonnull
+    String getLatestCommit(@Nullable String authHeader, @Nullable String repo, @Nullable String branch);
+
+    @Nonnull
+    List<Change> listChanges(@Nullable String authHeader, @Nullable String repo, @Nullable String source,
+                            @Nullable String dest);
 }

@@ -5,18 +5,21 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.hardnorth.github.merge.exception.ConnectionException;
 import net.hardnorth.github.merge.exception.HttpException;
+import net.hardnorth.github.merge.model.Change;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.Github;
 import net.hardnorth.github.merge.service.GithubApiClient;
 import net.hardnorth.github.merge.service.GithubAuthClient;
 import net.hardnorth.github.merge.utils.WebClientCommon;
 import okhttp3.OkHttpClient;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpStatus;
 import retrofit2.Response;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
 
 public class GithubService implements Github {
 
@@ -27,6 +30,8 @@ public class GithubService implements Github {
     private static final String NAME_FIELD = "name";
     private static final String CONTENT_FIELD = "content";
     private static final String SIZE_FIELD = "size";
+    private static final String COMMIT_FIELD = "commit";
+    private static final String COMMIT_HASH_FIELD = "sha";
 
     public static final RuntimeException INVALID_API_RESPONSE = new ConnectionException("Invalid response from Github API");
     private static final RuntimeException UNABLE_TO_GET_CONFIGURATION_EXCEPTION_INVALID_RESPONSE
@@ -40,6 +45,9 @@ public class GithubService implements Github {
 
     private static final RuntimeException UNABLE_TO_GET_CONFIGURATION_FILE_TOO_BIG
             = new HttpException("Unable to get merge configuration for target branch: file size limit exceed", HttpStatus.SC_REQUEST_TOO_LONG);
+
+    private static final RuntimeException UNABLE_TO_GET_BRANCH_RESPONSE_IS_NOT_JSON
+            = new HttpException("Unable to get information for target branch: response is not JSON", HttpStatus.SC_FAILED_DEPENDENCY);
 
     private final OkHttpClient client;
     private final GithubAuthClient authClient;
@@ -59,7 +67,7 @@ public class GithubService implements Github {
 
     @Nonnull
     @Override
-    public Pair<String, String> loginApplication(String code, String state) {
+    public String loginApplication(String code, String state) {
         Response<JsonObject> rs = WebClientCommon.executeServiceCall(authClient.loginApplication(credentials.getId(),
                 credentials.getToken(), code, state, null));
         if (rs.body() == null) {
@@ -76,7 +84,7 @@ public class GithubService implements Github {
         }
         String githubToken = tokenObject.getAsString();
         String tokenType = tokenTypeObject.getAsString();
-        return Pair.of(tokenType, githubToken);
+        return tokenType + " " + githubToken;
     }
 
     @Nonnull
@@ -125,7 +133,8 @@ public class GithubService implements Github {
 
     @Nonnull
     @Override
-    public byte[] getFileContent(String authHeader, String repo, String branch, String filePath) {
+    public byte[] getFileContent(@Nullable String authHeader, @Nullable String repo, @Nullable String branch,
+                                 @Nonnull String filePath) {
         JsonObject mergeFileInfo = getFileInfo(authHeader, repo, branch, filePath);
         if (!mergeFileInfo.has(SIZE_FIELD) || !mergeFileInfo.getAsJsonPrimitive(SIZE_FIELD).isNumber()) {
             throw UNABLE_TO_GET_CONFIGURATION_RESPONSE_IS_NOT_JSON;
@@ -148,5 +157,30 @@ public class GithubService implements Github {
 
         return Base64.getDecoder()
                 .decode(file.getAsJsonPrimitive(CONTENT_FIELD).getAsString().replace("\n", "").replace("\r", ""));
+    }
+
+    @Nonnull
+    @Override
+    public String getLatestCommit(@Nullable String authHeader, @Nullable String repo, @Nullable String branch) {
+        JsonObject branchInfo = WebClientCommon.executeServiceCall(apiClient.getBranch(authHeader, repo, branch)).body();
+        if (branchInfo == null || !branchInfo.has(COMMIT_FIELD) || !branchInfo.get(CONTENT_FIELD).isJsonObject()) {
+            throw UNABLE_TO_GET_BRANCH_RESPONSE_IS_NOT_JSON;
+        }
+        JsonObject commitInfo = branchInfo.getAsJsonObject(COMMIT_FIELD);
+        if (commitInfo == null || !commitInfo.has(COMMIT_HASH_FIELD) || !commitInfo.get(COMMIT_HASH_FIELD).isJsonPrimitive()
+        || !commitInfo.getAsJsonPrimitive(COMMIT_HASH_FIELD).isString()) {
+            throw UNABLE_TO_GET_BRANCH_RESPONSE_IS_NOT_JSON;
+        }
+        return commitInfo.getAsJsonPrimitive(COMMIT_HASH_FIELD).getAsString();
+    }
+
+    @Nonnull
+    @Override
+    public List<Change> listChanges(@Nullable String authHeader, @Nullable String repo, @Nullable String source,
+                             @Nullable String dest) {
+        String sourceCommit = getLatestCommit(authHeader, repo, source);
+        String destCommit = getLatestCommit(authHeader, repo, dest);
+
+        return Collections.emptyList();
     }
 }

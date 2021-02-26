@@ -112,7 +112,7 @@ public class GithubOAuthServiceTest {
         when(response.body()).thenReturn(responseBody);
         when(encryptionService.encrypt(any(), any())).thenReturn(ENCRYPTED_TOKEN);
 
-        when(github.loginApplication(same(code), eq(state))).thenReturn(Pair.of(tokenType, accessToken));
+        when(github.loginApplication(same(code), eq(state))).thenReturn(tokenType + " " + accessToken);
         return Pair.of(code, accessToken);
     }
 

@@ -159,8 +159,7 @@ public class GithubOAuthService implements OAuthService {
             // Cleanup temporary authorization data
             datastore.delete(authKey);
         }
-        Pair<String, String> token = github.loginApplication(code, state);
-        String githubAuthenticationStr = token.getKey() + " " + token.getValue();
+        String githubAuthenticationStr = github.loginApplication(code, state);
 
         // Generate new authentication data
         Pair<Token, String> userTokenHash = generateAuthToken();

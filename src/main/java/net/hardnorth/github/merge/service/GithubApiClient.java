@@ -11,33 +11,18 @@ import java.util.Map;
 
 public interface GithubApiClient {
 
-    // Pulls
-
-    @GET("repos/{repo}/pulls")
-    @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
-    Call<JsonObject> getPullRequestList(@Header("Authorization") String auth, @Path("repo") String repo,
-                                        @QueryMap Map<String, String> params);
-
-    @POST("repos/{repo}/pulls")
-    @FormUrlEncoded
-    @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
-    Call<JsonObject> createPullRequest(@Header("Authorization") String auth, @Path("repo") String repo,
-                                       @FieldMap Map<String, String> params);
-
-
-    @GET("repos/{repo}/pulls/{number}")
-    @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
-    Call<JsonObject> getPullRequest(@Header("Authorization") String auth, @Path("repo") String repo,
-                                    @Path("number") int number);
-
-    // Repos
-
-    @GET("repos/{repo}")
-    @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
-    Call<JsonObject> getRepoInfo(@Header("Authorization") String auth, @Path("repo") String repo);
-
     @GET("repos/{repo}/contents/{path}")
     @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
     Call<JsonElement> getContent(@Header("Authorization") String auth, @Path("repo") String repo,
                                  @Path("path") String path, @QueryParam("ref") String ref);
+
+    @GET("/repos/{repo}/branches/{branch}")
+    @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
+    Call<JsonObject> getBranch(@Header("Authorization") String auth, @Path("repo") String repo,
+                                 @Path("branch") String branch);
+
+    @GET("/repos/{repo}/branches/{branch}")
+    @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
+    Call<JsonObject> compareCommits(@Header("Authorization") String auth, @Path("repo") String repo,
+                               @Path("branch") String branch);
 }

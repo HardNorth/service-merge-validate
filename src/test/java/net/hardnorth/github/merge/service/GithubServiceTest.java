@@ -13,12 +13,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -68,4 +70,14 @@ public class GithubServiceTest {
         assertThat(result.getMessage(), Matchers.endsWith(message));
     }
 
+    @Test
+    public void verify_github_bad_merge_file_responses() throws IOException {
+        mockContentCall("", GSON.fromJson(IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream("github/file_list_merge_file.json")), JsonElement.class));
+        String content = IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream("github/merge_file_default.json"));
+        mockContentCall(MERGE_FILE_NAME, GSON.fromJson(content, JsonElement.class));
+
+        String result = new String(github.getFileContent("auth", "HardNorth/test", "dest", MERGE_FILE_NAME), StandardCharsets.UTF_8);
+        String expected = IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream("file/default.txt")).replace("\r", "");
+        assertThat(result, Matchers.equalTo(expected));
+    }
 }
