@@ -1,6 +1,7 @@
 package net.hardnorth.github.merge.service;
 
 import net.hardnorth.github.merge.model.Change;
+import net.hardnorth.github.merge.model.CommitDifference;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -18,6 +19,6 @@ public interface Github {
     String getLatestCommit(@Nullable String authHeader, @Nullable String repo, @Nullable String branch);
 
     @Nonnull
-    List<Change> listChanges(@Nullable String authHeader, @Nullable String repo, @Nullable String source,
-                            @Nullable String dest);
+    CommitDifference listChanges(@Nullable String authHeader, @Nullable String repo, @Nullable String source,
+                                 @Nullable String dest);
 }

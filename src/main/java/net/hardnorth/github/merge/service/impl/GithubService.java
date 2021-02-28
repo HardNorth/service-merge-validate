@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.hardnorth.github.merge.exception.ConnectionException;
 import net.hardnorth.github.merge.exception.HttpException;
-import net.hardnorth.github.merge.model.Change;
+import net.hardnorth.github.merge.model.CommitDifference;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.Github;
 import net.hardnorth.github.merge.service.GithubApiClient;
@@ -19,7 +19,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.List;
 
 public class GithubService implements Github {
 
@@ -32,6 +31,9 @@ public class GithubService implements Github {
     private static final String SIZE_FIELD = "size";
     private static final String COMMIT_FIELD = "commit";
     private static final String COMMIT_HASH_FIELD = "sha";
+    private static final String AHEAD_BY_FIELD = "ahead_by";
+    private static final String BEHIND_BY_FIELD = "behind_by";
+    private static final String COMMITS_FIELD = "commits";
 
     public static final RuntimeException INVALID_API_RESPONSE = new ConnectionException("Invalid response from Github API");
     private static final RuntimeException UNABLE_TO_GET_CONFIGURATION_EXCEPTION_INVALID_RESPONSE
@@ -48,6 +50,9 @@ public class GithubService implements Github {
 
     private static final RuntimeException UNABLE_TO_GET_BRANCH_RESPONSE_IS_NOT_JSON
             = new HttpException("Unable to get information for target branch: response is not JSON", HttpStatus.SC_FAILED_DEPENDENCY);
+
+    private static final RuntimeException UNABLE_TO_COMPARE_COMMITS_RESPONSE_IS_NOT_JSON
+            = new HttpException("Unable to compare commits: response is not JSON", HttpStatus.SC_FAILED_DEPENDENCY);
 
     private final OkHttpClient client;
     private final GithubAuthClient authClient;
@@ -168,7 +173,7 @@ public class GithubService implements Github {
         }
         JsonObject commitInfo = branchInfo.getAsJsonObject(COMMIT_FIELD);
         if (commitInfo == null || !commitInfo.has(COMMIT_HASH_FIELD) || !commitInfo.get(COMMIT_HASH_FIELD).isJsonPrimitive()
-        || !commitInfo.getAsJsonPrimitive(COMMIT_HASH_FIELD).isString()) {
+                || !commitInfo.getAsJsonPrimitive(COMMIT_HASH_FIELD).isString()) {
             throw UNABLE_TO_GET_BRANCH_RESPONSE_IS_NOT_JSON;
         }
         return commitInfo.getAsJsonPrimitive(COMMIT_HASH_FIELD).getAsString();
@@ -176,11 +181,23 @@ public class GithubService implements Github {
 
     @Nonnull
     @Override
-    public List<Change> listChanges(@Nullable String authHeader, @Nullable String repo, @Nullable String source,
-                             @Nullable String dest) {
+    public CommitDifference listChanges(@Nullable String authHeader, @Nullable String repo, @Nullable String source,
+                                        @Nullable String dest) {
         String sourceCommit = getLatestCommit(authHeader, repo, source);
         String destCommit = getLatestCommit(authHeader, repo, dest);
 
-        return Collections.emptyList();
+        JsonObject diff = WebClientCommon.executeServiceCall(apiClient.compareCommits(authHeader, repo, sourceCommit, destCommit)).body();
+        if (diff == null || !diff.has(AHEAD_BY_FIELD) || !diff.get(AHEAD_BY_FIELD).isJsonPrimitive() || !diff.getAsJsonPrimitive(AHEAD_BY_FIELD).isNumber()
+                || !diff.has(BEHIND_BY_FIELD) || !diff.get(BEHIND_BY_FIELD).isJsonPrimitive() || !diff.getAsJsonPrimitive(BEHIND_BY_FIELD).isNumber()
+                || !diff.has(COMMITS_FIELD) || !diff.get(COMMITS_FIELD).isJsonArray()) {
+            throw UNABLE_TO_COMPARE_COMMITS_RESPONSE_IS_NOT_JSON;
+        }
+
+        JsonArray commits = diff.getAsJsonArray(COMMITS_FIELD);
+
+
+        return new CommitDifference(diff.getAsJsonPrimitive(AHEAD_BY_FIELD).getAsInt(),
+                diff.getAsJsonPrimitive(BEHIND_BY_FIELD).getAsInt(),
+                Collections.emptyList());
     }
 }

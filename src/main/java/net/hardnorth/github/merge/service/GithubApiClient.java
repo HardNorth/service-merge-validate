@@ -21,8 +21,9 @@ public interface GithubApiClient {
     Call<JsonObject> getBranch(@Header("Authorization") String auth, @Path("repo") String repo,
                                  @Path("branch") String branch);
 
-    @GET("/repos/{repo}/branches/{branch}")
+    @GET("/repos/{repo}/compare/{base}...{head}")
     @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
     Call<JsonObject> compareCommits(@Header("Authorization") String auth, @Path("repo") String repo,
-                               @Path("branch") String branch);
+                               @Path("base") String base, @Path("head") String head);
+
 }
