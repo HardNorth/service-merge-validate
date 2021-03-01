@@ -7,9 +7,9 @@ public class CommitDifference {
 
     private final int aheadBy;
     private final int behindBy;
-    private final List<Change> commits;
+    private final List<FileChange> commits;
 
-    public CommitDifference(int aheadByCount, int behindByCount, List<Change> commitDifference) {
+    public CommitDifference(int aheadByCount, int behindByCount, List<FileChange> commitDifference) {
         aheadBy = aheadByCount;
         behindBy = behindByCount;
         commits = new ArrayList<>(commitDifference);
@@ -23,7 +23,7 @@ public class CommitDifference {
         return behindBy;
     }
 
-    public List<Change> getCommits() {
+    public List<FileChange> getCommits() {
         return new ArrayList<>(commits);
     }
 }

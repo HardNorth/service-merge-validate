@@ -1,11 +1,9 @@
 package net.hardnorth.github.merge.service;
 
-import net.hardnorth.github.merge.model.Change;
 import net.hardnorth.github.merge.model.CommitDifference;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
 
 public interface Github {
     @Nonnull

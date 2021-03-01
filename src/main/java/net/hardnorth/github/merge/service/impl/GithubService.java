@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import net.hardnorth.github.merge.exception.ConnectionException;
 import net.hardnorth.github.merge.exception.HttpException;
 import net.hardnorth.github.merge.model.CommitDifference;
+import net.hardnorth.github.merge.model.FileChange;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.Github;
 import net.hardnorth.github.merge.service.GithubApiClient;
@@ -18,7 +19,9 @@ import retrofit2.Response;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Base64;
-import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class GithubService implements Github {
 
@@ -33,7 +36,9 @@ public class GithubService implements Github {
     private static final String COMMIT_HASH_FIELD = "sha";
     private static final String AHEAD_BY_FIELD = "ahead_by";
     private static final String BEHIND_BY_FIELD = "behind_by";
-    private static final String COMMITS_FIELD = "commits";
+    private static final String FILES_FIELD = "files";
+    private static final String FILENAME_FIELD = "filename";
+    private static final String STATUS_FIELD = "status";
 
     public static final RuntimeException INVALID_API_RESPONSE = new ConnectionException("Invalid response from Github API");
     private static final RuntimeException UNABLE_TO_GET_CONFIGURATION_EXCEPTION_INVALID_RESPONSE
@@ -53,6 +58,9 @@ public class GithubService implements Github {
 
     private static final RuntimeException UNABLE_TO_COMPARE_COMMITS_RESPONSE_IS_NOT_JSON
             = new HttpException("Unable to compare commits: response is not JSON", HttpStatus.SC_FAILED_DEPENDENCY);
+
+    private static final RuntimeException UNABLE_TO_COMPARE_COMMITS_INVALID_FILES_FORMAT
+            = new HttpException("Unable to compare commits: invalid files format", HttpStatus.SC_FAILED_DEPENDENCY);
 
     private final OkHttpClient client;
     private final GithubAuthClient authClient;
@@ -189,15 +197,30 @@ public class GithubService implements Github {
         JsonObject diff = WebClientCommon.executeServiceCall(apiClient.compareCommits(authHeader, repo, sourceCommit, destCommit)).body();
         if (diff == null || !diff.has(AHEAD_BY_FIELD) || !diff.get(AHEAD_BY_FIELD).isJsonPrimitive() || !diff.getAsJsonPrimitive(AHEAD_BY_FIELD).isNumber()
                 || !diff.has(BEHIND_BY_FIELD) || !diff.get(BEHIND_BY_FIELD).isJsonPrimitive() || !diff.getAsJsonPrimitive(BEHIND_BY_FIELD).isNumber()
-                || !diff.has(COMMITS_FIELD) || !diff.get(COMMITS_FIELD).isJsonArray()) {
+                || !diff.has(FILES_FIELD) || !diff.get(FILES_FIELD).isJsonArray()) {
             throw UNABLE_TO_COMPARE_COMMITS_RESPONSE_IS_NOT_JSON;
         }
 
-        JsonArray commits = diff.getAsJsonArray(COMMITS_FIELD);
-
+        JsonArray commits = diff.getAsJsonArray(FILES_FIELD);
+        List<FileChange> fileChanges = StreamSupport.stream(commits.spliterator(), false).map(f -> {
+            if (!f.isJsonObject()) {
+                throw UNABLE_TO_COMPARE_COMMITS_INVALID_FILES_FORMAT;
+            }
+            JsonObject fo = f.getAsJsonObject();
+            if (!fo.has(STATUS_FIELD) || !fo.has(FILENAME_FIELD) || !fo.get(STATUS_FIELD).isJsonPrimitive()
+                    || !fo.get(FILENAME_FIELD).isJsonPrimitive() || !fo.getAsJsonPrimitive(STATUS_FIELD).isString()
+                    || !fo.getAsJsonPrimitive(FILENAME_FIELD).isString()) {
+                throw UNABLE_TO_COMPARE_COMMITS_INVALID_FILES_FORMAT;
+            }
+            FileChange.Type type = FileChange.Type.getByStatus(fo.getAsJsonPrimitive(STATUS_FIELD).getAsString());
+            if (type == null) {
+                throw UNABLE_TO_COMPARE_COMMITS_INVALID_FILES_FORMAT;
+            }
+            return new FileChange(type, fo.getAsJsonPrimitive(FILENAME_FIELD).getAsString());
+        }).collect(Collectors.toList());
 
         return new CommitDifference(diff.getAsJsonPrimitive(AHEAD_BY_FIELD).getAsInt(),
                 diff.getAsJsonPrimitive(BEHIND_BY_FIELD).getAsInt(),
-                Collections.emptyList());
+                fileChanges);
     }
 }
