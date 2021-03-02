@@ -7,7 +7,6 @@ import retrofit2.Call;
 import retrofit2.http.*;
 
 import javax.ws.rs.QueryParam;
-import java.util.Map;
 
 public interface GithubApiClient {
 
@@ -26,4 +25,7 @@ public interface GithubApiClient {
     Call<JsonObject> compareCommits(@Header("Authorization") String auth, @Path("repo") String repo,
                                @Path("base") String base, @Path("head") String head);
 
+    @POST("/repos/{repo}/merges")
+    @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
+    Call<JsonObject> mergeBranches(@Header("Authorization") String auth, @Path("repo") String repo, @Body JsonObject body);
 }

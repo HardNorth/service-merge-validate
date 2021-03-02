@@ -36,7 +36,7 @@ public class ValidationPattern implements Predicate<Path> {
 
     private final List<Rule> rules;
 
-    private ValidationPattern(List<Rule> ruleList) {
+    ValidationPattern(List<Rule> ruleList) {
         rules = ruleList;
     }
 
@@ -49,18 +49,27 @@ public class ValidationPattern implements Predicate<Path> {
         return result;
     }
 
-    public static ValidationPattern parse(String pattern) {
-        String[] content = pattern.split("\\r?\\n");
-        List<Rule> result = Arrays.stream(content).filter(l -> !l.isBlank()).filter(l -> !l.startsWith("#")).map(l -> {
-            if (l.startsWith("!")) {
-                return new Rule(Rule.RuleType.EXCLUDE, l.substring(1));
-            } else if (l.startsWith("\\") && l.length() > 1 && ('#' == l.charAt(1) || '!' == l.charAt(1) || '\\' == l.charAt(1))) {
-                return new Rule(Rule.RuleType.INCLUDE, l.substring(1));
-            } else {
-                return new Rule(Rule.RuleType.INCLUDE, l);
-            }
-        }).collect(Collectors.toList());
-        return new ValidationPattern(result);
+    private static Rule toRule(String ruleStr) {
+        if (ruleStr.startsWith("!")) {
+            return new Rule(Rule.RuleType.EXCLUDE, ruleStr.substring(1));
+        } else if (ruleStr.startsWith("\\") && ruleStr.length() > 1 && ('#' == ruleStr.charAt(1) || '!' == ruleStr.charAt(1) || '\\' == ruleStr.charAt(1))) {
+            return new Rule(Rule.RuleType.INCLUDE, ruleStr.substring(1));
+        } else {
+            return new Rule(Rule.RuleType.INCLUDE, ruleStr);
+        }
     }
 
+    public void addRule(String ruleStr) {
+        rules.add(toRule(ruleStr));
+    }
+
+    public static ValidationPattern parse(String pattern) {
+        String[] content = pattern.split("\\r?\\n");
+        List<Rule> result = Arrays.stream(content)
+                .filter(l -> !l.isBlank())
+                .filter(l -> !l.startsWith("#"))
+                .map(ValidationPattern::toRule)
+                .collect(Collectors.toList());
+        return new ValidationPattern(result);
+    }
 }

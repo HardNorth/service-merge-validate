@@ -19,4 +19,7 @@ public interface Github {
     @Nonnull
     CommitDifference listChanges(@Nullable String authHeader, @Nullable String repo, @Nullable String source,
                                  @Nullable String dest);
+
+    void merge(@Nullable String authHeader, @Nullable String repo, @Nullable String source,
+               @Nullable String dest, @Nullable String message);
 }
