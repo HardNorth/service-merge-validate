@@ -182,7 +182,7 @@ public class GithubService implements Github {
     @Override
     public String getLatestCommit(@Nullable String authHeader, @Nullable String repo, @Nullable String branch) {
         JsonObject branchInfo = executeServiceCall(apiClient.getBranch(authHeader, repo, branch)).body();
-        if (branchInfo == null || !branchInfo.has(COMMIT_FIELD) || !branchInfo.get(CONTENT_FIELD).isJsonObject()) {
+        if (branchInfo == null || !branchInfo.has(COMMIT_FIELD) || !branchInfo.get(COMMIT_FIELD).isJsonObject()) {
             throw UNABLE_TO_GET_BRANCH_RESPONSE_IS_NOT_JSON;
         }
         JsonObject commitInfo = branchInfo.getAsJsonObject(COMMIT_FIELD);
@@ -200,7 +200,7 @@ public class GithubService implements Github {
         String sourceCommit = getLatestCommit(authHeader, repo, source);
         String destCommit = getLatestCommit(authHeader, repo, dest);
 
-        JsonObject diff = executeServiceCall(apiClient.compareCommits(authHeader, repo, sourceCommit, destCommit)).body();
+        JsonObject diff = executeServiceCall(apiClient.compareCommits(authHeader, repo, destCommit, sourceCommit)).body();
         if (diff == null || !diff.has(AHEAD_BY_FIELD) || !diff.get(AHEAD_BY_FIELD).isJsonPrimitive() || !diff.getAsJsonPrimitive(AHEAD_BY_FIELD).isNumber()
                 || !diff.has(BEHIND_BY_FIELD) || !diff.get(BEHIND_BY_FIELD).isJsonPrimitive() || !diff.getAsJsonPrimitive(BEHIND_BY_FIELD).isNumber()
                 || !diff.has(FILES_FIELD) || !diff.get(FILES_FIELD).isJsonArray()) {

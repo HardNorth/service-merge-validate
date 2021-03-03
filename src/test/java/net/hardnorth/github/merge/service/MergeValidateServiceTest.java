@@ -1,11 +1,13 @@
 package net.hardnorth.github.merge.service;
 
 import net.hardnorth.github.merge.model.Charset;
+import net.hardnorth.github.merge.model.CommitDifference;
 import net.hardnorth.github.merge.service.impl.MergeValidateService;
 import net.hardnorth.github.merge.utils.IoUtils;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -27,6 +29,8 @@ public class MergeValidateServiceTest {
     public void verify_github_merge_success() {
         when(github.getFileContent(eq(AUTHORIZATION), eq(REPO), eq(DEST_BRANCH), eq(MERGE_FILE_NAME)))
                 .thenReturn(IoUtils.readInputStreamToBytes(getClass().getClassLoader().getResourceAsStream("validation/default.txt")));
+        when(github.listChanges(eq(AUTHORIZATION), eq(REPO), eq(DEST_BRANCH), eq(SOURCE_BRANCH)))
+                .thenReturn(new CommitDifference(0, 0, Collections.emptyList()));
         service.merge(AUTHORIZATION, REPO, SOURCE_BRANCH, DEST_BRANCH);
     }
 
