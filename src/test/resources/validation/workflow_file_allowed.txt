@@ -1,0 +1,5 @@
+./CHANGELOG.md
+./README.md
+.github/workflows/ci.yml
+README_TEMPLATE.md
+gradle.properties

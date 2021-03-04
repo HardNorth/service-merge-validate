@@ -1,0 +1,5 @@
+./CHANGELOG.md
+./README.md
+.merge-validate
+README_TEMPLATE.md
+gradle.properties

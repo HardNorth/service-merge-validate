@@ -5,6 +5,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class ValidationPatternTest {
     @ParameterizedTest
     @MethodSource("patternValues")
     public void pattern_tests(String patternFile, String testFile, Boolean result) throws FileNotFoundException {
-        String file = IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream(patternFile));
+        String file = IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream(patternFile), StandardCharsets.UTF_8);
         ValidationPattern pattern = ValidationPattern.parse(ofNullable(file).orElseThrow(FileNotFoundException::new));
 
         assertThat(pattern.test(new File(testFile).toPath()), equalTo(result));

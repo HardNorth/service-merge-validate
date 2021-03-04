@@ -87,7 +87,7 @@ public class MergeValidateContext {
     public Github githubService(OkHttpClient httpClient, GithubAuthClient authClient, GithubApiClient apiClient,
                                 GithubCredentials githubCredentials, Charset currentCharset,
                                 @ConfigProperty(name = PropertyNames.GITHUB_FILE_SIZE_LIMIT) long sizeLimit) {
-        return new GithubService(httpClient, authClient, apiClient, githubCredentials, sizeLimit);
+        return new GithubService(httpClient, authClient, apiClient, githubCredentials, sizeLimit, currentCharset);
     }
 
     @Produces

@@ -16,16 +16,17 @@ import retrofit2.Response;
 
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 public class WebClientCommon {
     private static final int FAILED_DEPENDENCY = HttpStatus.SC_FAILED_DEPENDENCY;
 
-    public static <T> Response<T> executeServiceCall(Call<T> request) {
+    public static <T> Response<T> executeServiceCall(Call<T> request, Charset charset) {
         try {
             Response<T> result = request.execute();
             if (!result.isSuccessful()) {
                 if (result.code() >= HttpStatus.SC_BAD_REQUEST) {
-                    JsonObject errorResponse = parseErrorBodyIfValid(result.headers(), result.errorBody());
+                    JsonObject errorResponse = parseErrorBodyIfValid(result.headers(), result.errorBody(), charset);
                     String message = "Downstream service error: " + result.code() + " " + result.message();
                     if (errorResponse != null) {
                         throw new RestServiceException(message, result.code(), errorResponse);
@@ -41,12 +42,12 @@ public class WebClientCommon {
         }
     }
 
-    public static okhttp3.Response executeServiceCall(okhttp3.Call request) {
+    public static okhttp3.Response executeServiceCall(okhttp3.Call request, Charset charset) {
         try {
             okhttp3.Response result = request.execute();
             if (!result.isSuccessful()) {
                 if (result.code() >= HttpStatus.SC_BAD_REQUEST) {
-                    JsonObject errorResponse = parseErrorBodyIfValid(result.headers(), result.body());
+                    JsonObject errorResponse = parseErrorBodyIfValid(result.headers(), result.body(), charset);
                     String message = "Downstream service error: " + result.code() + " " + result.message();
                     if (errorResponse != null) {
                         throw new RestServiceException(message, result.code(), errorResponse);
@@ -62,7 +63,7 @@ public class WebClientCommon {
         }
     }
 
-    private static JsonObject parseErrorBodyIfValid(Headers headers, ResponseBody body) {
+    private static JsonObject parseErrorBodyIfValid(Headers headers, ResponseBody body, Charset charset) {
         if (headers == null || body == null) {
             return null;
         }
@@ -72,7 +73,7 @@ public class WebClientCommon {
             return null;
         }
 
-        String bodyStr = IoUtils.readInputStreamToString(body.byteStream());
+        String bodyStr = IoUtils.readInputStreamToString(body.byteStream(), charset);
         if (bodyStr == null) {
             return null;
         }

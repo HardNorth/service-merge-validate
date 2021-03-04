@@ -9,6 +9,7 @@ public class CommitDifference {
     private final int behindBy;
     private final List<FileChange> commits;
 
+    @SuppressWarnings("CdiInjectionPointsInspection")
     public CommitDifference(int aheadByCount, int behindByCount, List<FileChange> commitDifference) {
         aheadBy = aheadByCount;
         behindBy = behindByCount;
@@ -25,5 +26,10 @@ public class CommitDifference {
 
     public List<FileChange> getCommits() {
         return new ArrayList<>(commits);
+    }
+
+    @Override
+    public String toString() {
+        return "[Ahead: " + aheadBy + "; Behind: " + behindBy + "; Changes: " + commits + "]";
     }
 }

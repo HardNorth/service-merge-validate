@@ -4,11 +4,10 @@ import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 
 public class IoUtils {
     private static final int KILOBYTE = 2 ^ 10;
@@ -23,21 +22,15 @@ public class IoUtils {
      * @return the result
      */
     @Nullable
-    public static String readInputStreamToString(@Nullable InputStream is) {
-        if(is == null) {
+    public static String readInputStreamToString(@Nullable InputStream is, Charset charset) {
+        if (is == null) {
             return null;
         }
         byte[] bytes = readInputStreamToBytes(is);
-        if (bytes.length <= 0) {
+        if (bytes == null || bytes.length <= 0) {
             return "";
         }
-
-        try {
-            return new String(bytes, StandardCharsets.UTF_8.name());
-        } catch (UnsupportedEncodingException e) {
-            // Most likely impossible case unless you run these tests on embedded controllers
-            return null;
-        }
+        return new String(bytes, charset);
     }
 
     /**
@@ -46,7 +39,11 @@ public class IoUtils {
      * @param is a stream to read from
      * @return the result
      */
-    public static byte[] readInputStreamToBytes(InputStream is) {
+    @Nullable
+    public static byte[] readInputStreamToBytes(@Nullable final InputStream is) {
+        if (is == null) {
+            return null;
+        }
         return readInputStreamToBytes(is, READ_BUFFER);
     }
 
@@ -57,7 +54,11 @@ public class IoUtils {
      * @param bufferSize size of read buffer in bytes
      * @return the result
      */
-    public static byte[] readInputStreamToBytes(InputStream is, int bufferSize) {
+    @Nullable
+    public static byte[] readInputStreamToBytes(@Nullable final InputStream is, final int bufferSize) {
+        if (is == null) {
+            return null;
+        }
         ReadableByteChannel channel = Channels.newChannel(is);
         ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

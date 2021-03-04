@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.hardnorth.github.merge.exception.HttpException;
+import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.model.CommitDifference;
 import net.hardnorth.github.merge.model.FileChange;
 import net.hardnorth.github.merge.model.GithubCredentials;
@@ -11,7 +12,6 @@ import net.hardnorth.github.merge.service.impl.GithubService;
 import net.hardnorth.github.merge.utils.IoUtils;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -45,11 +45,11 @@ public class GithubServiceTest {
     private final GithubAuthClient githubAuthClient = mock(GithubAuthClient.class);
     private final GithubApiClient githubApiClient = mock(GithubApiClient.class);
 
-    public final Github github = new GithubService(httpClient, githubAuthClient, githubApiClient, new GithubCredentials(CLIENT_ID, CLIENT_SECRET), 512000);
+    public final Github github = new GithubService(httpClient, githubAuthClient, githubApiClient, new GithubCredentials(CLIENT_ID, CLIENT_SECRET), 512000, new Charset(StandardCharsets.UTF_8));
 
 
-    @SuppressWarnings("unchecked")
-    private Pair<Call<JsonElement>, Response<JsonElement>> mockContentCall(String path, JsonElement responseBody) throws IOException {
+    @SuppressWarnings({"unchecked"})
+    private void mockContentCall(String path, JsonElement responseBody) throws IOException {
         Call<JsonElement> call = mock(Call.class);
         Response<JsonElement> response = mock(Response.class);
         when(call.execute()).thenReturn(response);
@@ -57,7 +57,10 @@ public class GithubServiceTest {
         when(githubApiClient.getContent(anyString(), anyString(), eq(path), eq("dest"))).thenReturn(call);
         when(response.body()).thenReturn(responseBody);
         when(response.headers()).thenReturn(Headers.of());
-        return Pair.of(call, response);
+    }
+
+    private String readFileString(String file) {
+        return IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream(file), StandardCharsets.UTF_8);
     }
 
     public static Iterable<Object[]> invalidConfigurationFileResponses() {
@@ -69,7 +72,7 @@ public class GithubServiceTest {
     @ParameterizedTest
     @MethodSource("invalidConfigurationFileResponses")
     public <T extends HttpException> void verify_github_bad_merge_file_responses(String file, Class<T> exception, int status, String message) throws IOException {
-        mockContentCall("", GSON.fromJson(IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream(file)), JsonElement.class));
+        mockContentCall("", GSON.fromJson(readFileString(file), JsonElement.class));
         T result = Assertions.assertThrows(exception, () -> github.getFileContent("auth", "HardNorth/test", "dest", MERGE_FILE_NAME));
         assertThat(result.getCode(), equalTo(status));
         assertThat(result.getMessage(), Matchers.endsWith(message));
@@ -77,16 +80,16 @@ public class GithubServiceTest {
 
     @Test
     public void verify_github_bad_merge_file_responses() throws IOException {
-        mockContentCall("", GSON.fromJson(IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream("github/file_list_merge_file.json")), JsonElement.class));
-        String content = IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream("github/merge_file_default.json"));
+        mockContentCall("", GSON.fromJson(readFileString("github/file_list_merge_file.json"), JsonElement.class));
+        String content = readFileString("github/merge_file_default.json");
         mockContentCall(MERGE_FILE_NAME, GSON.fromJson(content, JsonElement.class));
 
         String result = new String(github.getFileContent("auth", "HardNorth/test", "dest", MERGE_FILE_NAME), StandardCharsets.UTF_8);
-        String expected = IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream("file/default.txt"))
-                .replace("\r", "");
+        String expected = readFileString("file/default.txt").replace("\r", "");
         assertThat(result, equalTo(expected));
     }
 
+    @SuppressWarnings("unchecked")
     private void mockBranchResponse(String branch, JsonObject responseBody) throws IOException {
         Call<JsonObject> branchCall = mock(Call.class);
         Response<JsonObject> branchResponse = mock(Response.class);
@@ -97,12 +100,13 @@ public class GithubServiceTest {
         when(branchResponse.headers()).thenReturn(Headers.of());
     }
 
+    @SuppressWarnings({"unchecked", "SameParameterValue"})
     private void mockChangesCall(String source, String dest, JsonObject responseBody) throws IOException {
-        String masterBranchResponseStr = IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream("github/get_master_branch.json"));
+        String masterBranchResponseStr = readFileString("github/get_master_branch.json");
         JsonObject masterBranchResponse = GSON.fromJson(masterBranchResponseStr, JsonObject.class);
         mockBranchResponse(dest, masterBranchResponse);
 
-        String developBranchResponseStr = IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream("github/get_develop_branch.json"));
+        String developBranchResponseStr = readFileString("github/get_develop_branch.json");
         JsonObject developBranchResponse = GSON.fromJson(developBranchResponseStr, JsonObject.class);
         mockBranchResponse(source, developBranchResponse);
 
@@ -117,7 +121,7 @@ public class GithubServiceTest {
         when(response.headers()).thenReturn(Headers.of());
     }
 
-    public static Iterable<Object[]> invalidDiffResponses() {
+    public static Iterable<Object[]> diffResponses() {
         return Arrays.asList(new Object[]{"github/change_list_source_behind.json", new CommitDifference(0, 5,
                         Collections.emptyList())},
                 new Object[]{"github/change_list_illegal_changes.json", new CommitDifference(5, 0,
@@ -127,9 +131,9 @@ public class GithubServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("invalidDiffResponses")
+    @MethodSource("diffResponses")
     public void verify_github_changes_responses(String file, CommitDifference expected) throws IOException {
-        String changesStr = IoUtils.readInputStreamToString(getClass().getClassLoader().getResourceAsStream(file));
+        String changesStr = readFileString(file);
         mockChangesCall("develop", "master", GSON.fromJson(changesStr, JsonObject.class));
 
         CommitDifference result = github.listChanges("auth", "HardNorth/test", "develop", "master");

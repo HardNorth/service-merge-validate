@@ -10,6 +10,7 @@ public class FileChange {
 
         private final String status;
 
+        @SuppressWarnings("CdiInjectionPointsInspection")
         Type(String githubStatus) {
             status = githubStatus;
         }
@@ -23,6 +24,7 @@ public class FileChange {
     private final Type type;
     private final String name;
 
+    @SuppressWarnings("CdiInjectionPointsInspection")
     public FileChange(@Nonnull final Type changeType, @Nonnull final String changedFileName) {
         type = changeType;
         name = changedFileName;
@@ -36,5 +38,10 @@ public class FileChange {
     @Nonnull
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String toString() {
+        return "[Type: " + type.name() + "; File: " + name + "]";
     }
 }
