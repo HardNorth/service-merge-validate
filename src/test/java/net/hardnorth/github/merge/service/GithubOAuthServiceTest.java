@@ -67,7 +67,7 @@ public class GithubOAuthServiceTest {
 
         Map<String, String> query = parseQuery(urlStr);
 
-        assertThat(query, hasEntry(equalTo("redirect_uri"), startsWith(SERVICE_URL + "/integration/result/")));
+        assertThat(query, hasEntry(equalTo("redirect_uri"), startsWith(SERVICE_URL + "/integration/result")));
         assertThat(query, hasEntry(equalTo("state"), not(emptyOrNullString())));
         assertThat(query, hasEntry(equalTo("client_id"), equalTo(CLIENT_ID)));
         assertThat(query, hasEntry(equalTo("scope"), equalTo("repo user:email")));
@@ -78,7 +78,7 @@ public class GithubOAuthServiceTest {
         String urlStr = service.createIntegration();
         Map<String, String> urlQuery = parseQuery(urlStr);
 
-        String authToken = urlQuery.get("redirect_uri").substring(urlQuery.get("redirect_uri").lastIndexOf('/') + 1);
+        String authToken = parseQuery(urlQuery.get("redirect_uri")).get("authUuid");
         byte[] authTokenBytes = Base64.getUrlDecoder().decode(authToken);
         byte[] keyBytes = new byte[authTokenBytes[1]];
         System.arraycopy(authTokenBytes, 2, keyBytes, 0, keyBytes.length);
@@ -125,7 +125,7 @@ public class GithubOAuthServiceTest {
     public void verify_authorization_success() throws IOException {
         String urlStr = service.createIntegration();
         Map<String, String> urlQuery = parseQuery(urlStr);
-        String authToken = stripAuthToken(urlQuery.get("redirect_uri"));
+        String authToken = parseQuery(urlQuery.get("redirect_uri")).get("authUuid");
         String state = urlQuery.get("state");
 
         Pair<String, String> tokens = mockAuthorization(state);
@@ -164,7 +164,7 @@ public class GithubOAuthServiceTest {
     public void verify_authentication_success() throws IOException, InterruptedException {
         String urlStr = service.createIntegration();
         Map<String, String> urlQuery = parseQuery(urlStr);
-        String authToken = stripAuthToken(urlQuery.get("redirect_uri"));
+        String authToken = parseQuery(urlQuery.get("redirect_uri")).get("authUuid");
         String state = urlQuery.get("state");
 
         Pair<String, String> tokens = mockAuthorization(state);
@@ -197,7 +197,7 @@ public class GithubOAuthServiceTest {
     public void verify_authentication_failure_invalid_token_format() throws IOException, InterruptedException {
         String urlStr = service.createIntegration();
         Map<String, String> urlQuery = parseQuery(urlStr);
-        String authToken = stripAuthToken(urlQuery.get("redirect_uri"));
+        String authToken = parseQuery(urlQuery.get("redirect_uri")).get("authUuid");
         String state = urlQuery.get("state");
 
         Pair<String, String> tokens = mockAuthorization(state);
@@ -223,7 +223,7 @@ public class GithubOAuthServiceTest {
     public void verify_authentication_failure_no_such_token(String token) throws IOException, InterruptedException {
         String urlStr = service.createIntegration();
         Map<String, String> urlQuery = parseQuery(urlStr);
-        String authToken = stripAuthToken(urlQuery.get("redirect_uri"));
+        String authToken = parseQuery(urlQuery.get("redirect_uri")).get("authUuid");
         String state = urlQuery.get("state");
 
         Pair<String, String> tokens = mockAuthorization(state);

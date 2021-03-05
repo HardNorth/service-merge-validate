@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.http.client.utils.URIBuilder;
+import org.jboss.logging.Logger;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import javax.annotation.Nonnull;
@@ -32,13 +33,15 @@ import static net.hardnorth.github.merge.utils.Keys.encodeAuthToken;
 
 public class GithubOAuthService implements OAuthService {
 
+    private static final Logger LOGGER = Logger.getLogger(GithubOAuthService.class);
+
     public static final RuntimeException AUTHORIZATION_EXCEPTION = new UnauthorizedException("Unable to validate your request: invalid authentication token or state, or your authorization already expired");
     public static final RuntimeException AUTHENTICATION_EXCEPTION = new AuthenticationFailedException("Invalid authentication token");
 
     public static final String DEFAULT_GITHUB_OAUTH_URL = "https://github.com/login/oauth/authorize";
     public static final List<String> SCOPES = Arrays.asList("repo", "user:email");
 
-    public static final String REDIRECT_URI_PATTERN = "%s/integration/result/%s";
+    public static final String REDIRECT_URI_PATTERN = "%s/integration/result?authUuid=%s";
     private static final String AUTHORIZATION_KIND = "github-oauth";
     private static final String INTEGRATIONS_KIND = "integrations";
     private static final String AUTH_HASH = "authHash";
@@ -152,8 +155,10 @@ public class GithubOAuthService implements OAuthService {
 
         Timestamp now = Timestamp.now();
         Entity entity = datastore.get(authKey);
-        if (entity == null || !BCrypt.checkpw(bareToken.getRight().getValue(), entity.getString(AUTH_HASH)) ||
-                !entity.getString(STATE).equals(state) || now.compareTo(entity.getTimestamp(EXPIRES)) > 0) {
+        boolean notFound, hashInvalid = false, stateInvalid = false, expired = false;
+        if ((notFound = entity == null) || (hashInvalid = !BCrypt.checkpw(bareToken.getRight().getValue(), entity.getString(AUTH_HASH))) ||
+                (stateInvalid = !entity.getString(STATE).equals(state)) || (expired = now.compareTo(entity.getTimestamp(EXPIRES)) > 0)) {
+            LOGGER.warnf("Null entity: %s; Invalid hash: %s; State invalid: %s; Expired: %s", notFound, hashInvalid, stateInvalid, expired);
             throw AUTHORIZATION_EXCEPTION;
         } else {
             // Cleanup temporary authorization data

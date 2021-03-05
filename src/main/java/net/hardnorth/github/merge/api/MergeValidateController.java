@@ -6,6 +6,7 @@ import net.hardnorth.github.merge.utils.WebServiceCommon;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 
+import javax.annotation.Nonnull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -39,10 +40,10 @@ public class MergeValidateController {
     }
 
     @GET
-    @Path("integration/result/{authUuid}")
+    @Path("integration/result")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response integrationResult(@PathParam("authUuid") String authUuid, @QueryParam("state") String state,
-                                      @QueryParam("code") String code) {
+    public Response integrationResult(@Nonnull @QueryParam("authUuid") String authUuid, @Nonnull @QueryParam("state") String state,
+                                      @Nonnull @QueryParam("code") String code) {
         String userToken = authService.authorize(authUuid, code, state);
         return Response.status(HttpStatus.SC_OK)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
