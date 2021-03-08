@@ -39,6 +39,12 @@
         </dependencies>
     </dependencyManagement>
     <dependencies>
+        <!-- Required for Function primitives -->
+        <dependency>
+            <groupId>com.google.cloud.functions</groupId>
+            <artifactId>functions-framework-api</artifactId>
+            <version>1.0.4</version>
+        </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy-jsonb</artifactId>
