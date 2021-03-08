@@ -86,7 +86,7 @@ public class QuarkusHttpFunction implements HttpFunction {
         String path = request.getPath();
         Optional<String> host = request.getFirstHeader("Host");
         DefaultHttpRequest nettyRequest = new DefaultHttpRequest(HttpVersion.HTTP_1_1,
-                HttpMethod.valueOf(request.getMethod()), path + request.getQuery().map(q -> "?" + q).orElse(""));
+                HttpMethod.valueOf(request.getMethod()), request.getQuery().map(q -> path + "?" + q).orElse(path));
         if (host.isPresent()) {
             nettyRequest.headers().set("Host", host.get());
         }
