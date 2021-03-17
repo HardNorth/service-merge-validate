@@ -11,7 +11,6 @@ import javax.annotation.Nullable;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
 public class WebServiceCommon {
     public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSX";
@@ -46,13 +45,12 @@ public class WebServiceCommon {
 
     @Nullable
     public static String getAuthToken(@Nonnull String authHeader) {
-        String decoded = new String(Base64.getDecoder().decode(authHeader), StandardCharsets.UTF_8);
-        int separator = decoded.indexOf(' ');
+        int separator = authHeader.indexOf(' ');
         if (separator <= 0) {
             return null;
         }
-        String type = decoded.substring(0, separator);
-        String token = decoded.substring(separator + 1).trim();
+        String type = authHeader.substring(0, separator);
+        String token = authHeader.substring(separator + 1).trim();
         if (!"bearer".equalsIgnoreCase(type) || token.isEmpty()) {
             return null;
         }
