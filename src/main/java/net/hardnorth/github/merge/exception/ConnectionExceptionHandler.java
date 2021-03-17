@@ -9,14 +9,14 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
-import java.util.logging.Logger;
+import org.jboss.logging.Logger;
 
 import static net.hardnorth.github.merge.utils.WebExceptionUtils.getExceptionResponse;
 import static net.hardnorth.github.merge.utils.StringUtils.simpleFormat;
 
 @Provider
 public class ConnectionExceptionHandler implements ExceptionMapper<ConnectionException> {
-    private static final Logger LOGGER = Logger.getLogger(ConnectionExceptionHandler.class.getSimpleName());
+    private static final Logger LOGGER = Logger.getLogger(ConnectionExceptionHandler.class);
 
     @Context
     private ResourceInfo resourceInfo;
@@ -28,7 +28,7 @@ public class ConnectionExceptionHandler implements ExceptionMapper<ConnectionExc
     public Response toResponse(ConnectionException exception) {
         String error = "Downstream service connection error";
         int status = HttpStatus.SC_FAILED_DEPENDENCY;
-        LOGGER.warning(simpleFormat("Connection Error: '{}'. {}: '{}'\n{}",
+        LOGGER.warn(simpleFormat("Connection Error: '{}'. {}: '{}'\n{}",
                 error,
                 exception.getClass().getSimpleName(),
                 exception.getLocalizedMessage(),

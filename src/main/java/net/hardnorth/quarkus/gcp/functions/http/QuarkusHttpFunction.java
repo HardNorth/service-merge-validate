@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class QuarkusHttpFunction implements HttpFunction {
-    private static final Logger LOG = Logger.getLogger(io.quarkus.gcp.functions.http.QuarkusHttpFunction.class);
+    private static final Logger LOG = Logger.getLogger(QuarkusHttpFunction.class);
     protected static final String deploymentStatus;
     protected static boolean started = false;
 
