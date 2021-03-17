@@ -13,8 +13,8 @@ import java.util.Map;
 import static net.hardnorth.github.merge.utils.WebServiceCommon.GSON;
 import static net.hardnorth.github.merge.utils.WebServiceCommon.asString;
 
-public class ExceptionUtils {
-    private ExceptionUtils() {
+public class WebExceptionUtils {
+    private WebExceptionUtils() {
     }
 
     public static JsonElement getExceptionOutput(String path, int status, String error, String message) {

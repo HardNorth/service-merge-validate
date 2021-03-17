@@ -9,7 +9,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import static net.hardnorth.github.merge.utils.ExceptionUtils.getExceptionResponse;
+import static net.hardnorth.github.merge.utils.WebExceptionUtils.getExceptionResponse;
 
 @Provider
 public class NotFoundExceptionHandler implements ExceptionMapper<NotFoundException> {

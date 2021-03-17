@@ -8,7 +8,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 import java.util.logging.Logger;
 
-import static net.hardnorth.github.merge.utils.ExceptionUtils.getExceptionResponse;
+import static net.hardnorth.github.merge.utils.WebExceptionUtils.getExceptionResponse;
 import static net.hardnorth.github.merge.utils.StringUtils.simpleFormat;
 
 @Provider

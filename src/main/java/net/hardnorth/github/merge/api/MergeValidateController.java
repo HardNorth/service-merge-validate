@@ -32,8 +32,8 @@ public class MergeValidateController {
 
     @POST
     @Path("integration")
-    @Consumes(MediaType.WILDCARD)
-    @Produces(MediaType.WILDCARD)
+    @Consumes
+    @Produces
     public Response createIntegration() {
         // see: https://docs.github.com/en/free-pro-team@latest/developers/apps/authorizing-oauth-apps
         return WebServiceCommon.performRedirect(authService.createIntegration()); // return redirect URL in headers, authUuid
@@ -53,8 +53,8 @@ public class MergeValidateController {
 
     @PUT
     @Path("merge")
-    @Consumes(MediaType.WILDCARD)
-    @Produces(MediaType.WILDCARD)
+    @Consumes
+    @Produces
     public void merge(@HeaderParam(value = "Authorization") String auth, @QueryParam("repoRef") String repoRef,
                       @QueryParam("from") String from, @QueryParam("to") String to) {
         String authToken = WebServiceCommon.getAuthToken(auth);
