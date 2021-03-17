@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 import java.util.logging.Logger;
 
 import static net.hardnorth.github.merge.utils.WebExceptionUtils.getExceptionResponse;
+import static org.apache.commons.lang3.exception.ExceptionUtils.*;
 
 @Provider
 public class IllegalArgumentExceptionHandler implements ExceptionMapper<IllegalArgumentException> {
@@ -33,8 +34,7 @@ public class IllegalArgumentExceptionHandler implements ExceptionMapper<IllegalA
         String error = "Invalid input parameter";
         int status = HttpStatus.SC_BAD_REQUEST;
         if (IS_BASE64_EXCEPTION.test(exception)) {
-            LOGGER.warning("Unable to decode Base64: " + exception.getMessage() + "\n"
-                    + org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace(exception));
+            LOGGER.warning("Unable to decode Base64: " + exception.getMessage() + "\n" + getStackTrace(exception));
         }
         return getExceptionResponse(uriInfo, status, error, exception);
     }
