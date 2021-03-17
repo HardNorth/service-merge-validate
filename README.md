@@ -4,11 +4,13 @@ A service to validate and merge pull requests from GitHub Actions
 ![CI Build](https://github.com/HardNorth/service-merge-validate/workflows/CI%20Build/badge.svg)
 
 ### Create service account
-With:
-Cloud Datastore User
-Secret Manager Secret Accessor
-Secret Manager Secret Version Manager
-Secret Manager Viewer
+The service needs the following permissions:
+- `Cloud Datastore User` role
+- `Secret Manager` permissions:
+  - secretmanager.secrets.get  
+  - secretmanager.secrets.create
+  - secretmanager.versions.access
+  - secretmanager.versions.add
 
 ### Build
 ```none
