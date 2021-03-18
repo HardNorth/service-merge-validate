@@ -6,14 +6,12 @@ import org.apache.http.HttpHeaders;
 import retrofit2.Call;
 import retrofit2.http.*;
 
-import javax.ws.rs.QueryParam;
-
 public interface GithubApiClient {
 
     @GET("repos/{repo}/contents/{path}")
     @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
     Call<JsonElement> getContent(@Header("Authorization") String auth, @Path("repo") String repo,
-                                 @Path("path") String path, @QueryParam("ref") String ref);
+                                 @Path("path") String path, @Query("ref") String ref);
 
     @GET("/repos/{repo}/branches/{branch}")
     @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
