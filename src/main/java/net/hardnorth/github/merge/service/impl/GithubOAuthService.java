@@ -6,7 +6,6 @@ import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
 import com.google.cloud.datastore.KeyFactory;
 import io.quarkus.security.AuthenticationFailedException;
-import io.quarkus.security.UnauthorizedException;
 import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.model.Token;
@@ -35,8 +34,10 @@ public class GithubOAuthService implements OAuthService {
 
     private static final Logger LOGGER = Logger.getLogger(GithubOAuthService.class);
 
-    public static final RuntimeException AUTHORIZATION_EXCEPTION = new UnauthorizedException("Unable to validate your request: invalid authentication token or state, or your authorization already expired");
-    public static final RuntimeException AUTHENTICATION_EXCEPTION = new AuthenticationFailedException("Invalid authentication token");
+    public static final RuntimeException INVALID_AUTH_TOKEN =
+            new IllegalArgumentException("Unable to validate your request: invalid authentication token or state, or your authorization already expired");
+    public static final RuntimeException AUTHENTICATION_EXCEPTION =
+            new AuthenticationFailedException("Invalid authentication token");
 
     public static final String DEFAULT_GITHUB_OAUTH_URL = "https://github.com/login/oauth/authorize";
     public static final List<String> SCOPES = Arrays.asList("repo", "user:email");
@@ -159,7 +160,7 @@ public class GithubOAuthService implements OAuthService {
         if ((notFound = entity == null) || (hashInvalid = !BCrypt.checkpw(bareToken.getRight().getValue(), entity.getString(AUTH_HASH))) ||
                 (stateInvalid = !entity.getString(STATE).equals(state)) || (expired = now.compareTo(entity.getTimestamp(EXPIRES)) > 0)) {
             LOGGER.warnf("Null entity: %s; Invalid hash: %s; State invalid: %s; Expired: %s", notFound, hashInvalid, stateInvalid, expired);
-            throw AUTHORIZATION_EXCEPTION;
+            throw INVALID_AUTH_TOKEN;
         } else {
             // Cleanup temporary authorization data
             datastore.delete(authKey);

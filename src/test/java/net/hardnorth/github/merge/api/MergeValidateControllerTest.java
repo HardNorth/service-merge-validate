@@ -29,6 +29,7 @@ public class MergeValidateControllerTest {
     public static final String TEST_CLIENT_ID = "test_client_id";
     public static final String GITHUB_CLIENT_TOKEN = "test_client_token";
     public static final String GITHUB_ENCRYPTION_KEY = "test_encryption_key";
+    public static final String VALID_NOT_EXISTING_TOKEN = "AAcSSY81gAAAjoId_mI6Q3moVpishyO0iw";
 
     static {
         System.setProperty(PropertyNames.APPLICATION_URL, "https://merge.hardnorth.net");
@@ -67,16 +68,33 @@ public class MergeValidateControllerTest {
                 .header(HttpHeaders.LOCATION, startsWith(GITHUB_AUTHORIZE_URL));
     }
 
-    // The request will fail, but code '401' means that the call was happened and Github service context were up
+    // The request will fail, but body "Unable to validate your request" means that the call was happened and
+    // Github service context were up
     @Test
     public void test_authorize() {
         given()
                 .when()
                 .queryParam("code", "11111")
                 .queryParam("state", "22222")
-                .queryParam("authUuid", "AAcSSY81gAAAjoId_mI6Q3moVpishyO0iw")
+                .queryParam("authUuid", VALID_NOT_EXISTING_TOKEN)
                 .get("/integration/result")
                 .then()
-                .statusCode(HttpStatus.SC_UNAUTHORIZED);
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body("message", startsWith("Unable to validate your request"));
+    }
+
+    // The request will fail, but code '401' means that the call was parsed at least
+    @Test
+    public void test_merge() {
+        given()
+                .when()
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_NOT_EXISTING_TOKEN)
+                .queryParam("repoRef", "HardNorth/agent-java-testNG")
+                .queryParam("from", "develop")
+                .queryParam("to", "master")
+                .put("/merge")
+                .then()
+                .statusCode(HttpStatus.SC_UNAUTHORIZED)
+                .header(HttpHeaders.WWW_AUTHENTICATE, startsWith("Bearer "));
     }
 }

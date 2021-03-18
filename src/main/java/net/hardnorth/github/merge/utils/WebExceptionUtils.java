@@ -6,6 +6,7 @@ import org.apache.http.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -27,14 +28,20 @@ public class WebExceptionUtils {
         return GSON.toJsonTree(result);
     }
 
-    public static JsonElement getExceptionOutput(UriInfo uriInfo, int status, String error, String message) {
-        return getExceptionOutput(uriInfo.getPath(), status, error, message);
+    public static JsonElement getExceptionOutput(UriInfo uriInfo, int status, String errorMessage, String message) {
+        return getExceptionOutput(uriInfo.getPath(), status, errorMessage, message);
     }
 
-    public static Response getExceptionResponse(UriInfo uriInfo, int status, String error, Exception exception) {
-        return Response.status(status)
+    public static Response getExceptionResponse(UriInfo uriInfo, int status, String errorMessage, Exception exception) {
+        return getExceptionResponse(uriInfo, status, Collections.emptyMap(), errorMessage, exception);
+    }
+
+    public static Response getExceptionResponse(UriInfo uriInfo, int status, Map<String, String> additionalHeaders,
+                                                String errorMessage, Exception exception) {
+        Response.ResponseBuilder responseBuilder = Response.status(status)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_TYPE)
-                .entity(asString(getExceptionOutput(uriInfo, status, error, exception.getLocalizedMessage())))
-                .build();
+                .entity(asString(getExceptionOutput(uriInfo, status, errorMessage, exception.getLocalizedMessage())));
+        additionalHeaders.forEach(responseBuilder::header);
+        return responseBuilder.build();
     }
 }
