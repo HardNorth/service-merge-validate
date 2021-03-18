@@ -23,10 +23,9 @@ public class HttpExceptionHandler implements ExceptionMapper<HttpException> {
 
     @Override
     public Response toResponse(HttpException exception) {
-        String error = "Downstream service error";
+        String error = "Downstream service call error";
         int status = exception.getCode();
-        LOGGER.warn(simpleFormat("Downstream error: '{}'. {}: '{}'", error, exception.getClass().getSimpleName(),
-                exception.getLocalizedMessage()));
+        LOGGER.warn(simpleFormat("Downstream error: '{}'. ", error), exception);
         return getExceptionResponse(uriInfo, status, error, exception);
     }
 }
