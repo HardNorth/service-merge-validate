@@ -110,7 +110,7 @@ public class GithubService implements Github {
     }
 
     @Nonnull
-    private JsonObject getFileInfo(String authHeader, String repo, String branch, String filePath) {
+    private JsonObject getFileInfo(String authHeader, String user, String repo, String branch, String filePath) {
         String directoryPath;
         String fileName;
         if (filePath.contains(DIRECTORY_DELIMITER)) {
@@ -124,7 +124,7 @@ public class GithubService implements Github {
 
 
         Response<JsonElement> mergeFileDirectoryInfoRs =
-                executeServiceCall(apiClient.getContent(authHeader, repo, directoryPath, branch), charset);
+                executeServiceCall(apiClient.getContent(authHeader, user, repo, directoryPath, branch), charset);
         JsonElement mergeFileDirectoryInfo = mergeFileDirectoryInfoRs.body();
 
         if (mergeFileDirectoryInfo == null || !mergeFileDirectoryInfo.isJsonArray()) {
@@ -155,19 +155,19 @@ public class GithubService implements Github {
 
     @Nonnull
     @Override
-    public byte[] getFileContent(@Nullable String authHeader, @Nullable String repo, @Nullable String branch,
-                                 @Nonnull String filePath) {
-        JsonObject mergeFileInfo = getFileInfo(authHeader, repo, branch, filePath);
-        if (!mergeFileInfo.has(SIZE_FIELD) || !mergeFileInfo.getAsJsonPrimitive(SIZE_FIELD).isNumber()) {
+    public byte[] getFileContent(@Nullable String authHeader, @Nullable String user, @Nullable String repo,
+                                 @Nullable String branch, @Nonnull String filePath) {
+        JsonObject fileInfo = getFileInfo(authHeader, user, repo, branch, filePath);
+        if (!fileInfo.has(SIZE_FIELD) || !fileInfo.getAsJsonPrimitive(SIZE_FIELD).isNumber()) {
             throw UNABLE_TO_GET_CONFIGURATION_RESPONSE_IS_NOT_JSON;
         }
-        long size = mergeFileInfo.getAsJsonPrimitive(SIZE_FIELD).getAsLong();
+        long size = fileInfo.getAsJsonPrimitive(SIZE_FIELD).getAsLong();
 
         if (size > sizeLimit) {
             throw UNABLE_TO_GET_CONFIGURATION_FILE_TOO_BIG;
         }
 
-        JsonElement fileElement = executeServiceCall(apiClient.getContent(authHeader, repo, filePath, branch), charset).body();
+        JsonElement fileElement = executeServiceCall(apiClient.getContent(authHeader, user, repo, filePath, branch), charset).body();
         if (fileElement == null || !fileElement.isJsonObject()) {
             throw UNABLE_TO_GET_CONFIGURATION_RESPONSE_IS_NOT_JSON;
         }
@@ -183,8 +183,9 @@ public class GithubService implements Github {
 
     @Nonnull
     @Override
-    public String getLatestCommit(@Nullable String authHeader, @Nullable String repo, @Nullable String branch) {
-        JsonObject branchInfo = executeServiceCall(apiClient.getBranch(authHeader, repo, branch), charset).body();
+    public String getLatestCommit(@Nullable String authHeader, @Nullable String user, @Nullable String repo,
+                                  @Nullable String branch) {
+        JsonObject branchInfo = executeServiceCall(apiClient.getBranch(authHeader, user, repo, branch), charset).body();
         if (branchInfo == null || !branchInfo.has(COMMIT_FIELD) || !branchInfo.get(COMMIT_FIELD).isJsonObject()) {
             throw UNABLE_TO_GET_BRANCH_RESPONSE_IS_NOT_JSON;
         }
@@ -198,12 +199,12 @@ public class GithubService implements Github {
 
     @Nonnull
     @Override
-    public CommitDifference listChanges(@Nullable String authHeader, @Nullable String repo, @Nullable String source,
-                                        @Nullable String dest) {
-        String sourceCommit = getLatestCommit(authHeader, repo, source);
-        String destCommit = getLatestCommit(authHeader, repo, dest);
+    public CommitDifference listChanges(@Nullable String authHeader, @Nullable String user, @Nullable String repo,
+                                        @Nullable String source, @Nullable String dest) {
+        String sourceCommit = getLatestCommit(authHeader, user, repo, source);
+        String destCommit = getLatestCommit(authHeader, user, repo, dest);
 
-        JsonObject diff = executeServiceCall(apiClient.compareCommits(authHeader, repo, destCommit, sourceCommit), charset).body();
+        JsonObject diff = executeServiceCall(apiClient.compareCommits(authHeader, user, repo, destCommit, sourceCommit), charset).body();
         if (diff == null || !diff.has(AHEAD_BY_FIELD) || !diff.get(AHEAD_BY_FIELD).isJsonPrimitive() || !diff.getAsJsonPrimitive(AHEAD_BY_FIELD).isNumber()
                 || !diff.has(BEHIND_BY_FIELD) || !diff.get(BEHIND_BY_FIELD).isJsonPrimitive() || !diff.getAsJsonPrimitive(BEHIND_BY_FIELD).isNumber()
                 || !diff.has(FILES_FIELD) || !diff.get(FILES_FIELD).isJsonArray()) {
@@ -234,11 +235,12 @@ public class GithubService implements Github {
     }
 
     @Override
-    public void merge(@Nullable String authHeader, @Nullable String repo, @Nullable String source, @Nullable String dest, @Nullable String message) {
+    public void merge(@Nullable String authHeader, @Nullable String user, @Nullable String repo,
+                      @Nullable String source, @Nullable String dest, @Nullable String message) {
         JsonObject request = new JsonObject();
         ofNullable(dest).ifPresent(d -> request.add(BASE_FIELD, new JsonPrimitive(d)));
         ofNullable(source).ifPresent(s -> request.add(HEAD_FIELD, new JsonPrimitive(s)));
         ofNullable(message).ifPresent(m -> request.add(COMMIT_MESSAGE_FIELD, new JsonPrimitive(m)));
-        executeServiceCall(apiClient.mergeBranches(authHeader, repo, request), charset);
+        executeServiceCall(apiClient.mergeBranches(authHeader, user, repo, request), charset);
     }
 }

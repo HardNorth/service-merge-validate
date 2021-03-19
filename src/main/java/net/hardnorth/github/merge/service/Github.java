@@ -10,16 +10,17 @@ public interface Github {
     String loginApplication(@Nullable String code, @Nullable String state);
 
     @Nonnull
-    byte[] getFileContent(@Nullable String authHeader, @Nullable String repo, @Nullable String branch,
-                          @Nonnull String filePath);
+    byte[] getFileContent(@Nullable String authHeader, @Nullable String user, @Nullable String repo,
+                          @Nullable String branch, @Nonnull String filePath);
 
     @Nonnull
-    String getLatestCommit(@Nullable String authHeader, @Nullable String repo, @Nullable String branch);
+    String getLatestCommit(@Nullable String authHeader, @Nullable String user, @Nullable String repo,
+                           @Nullable String branch);
 
     @Nonnull
-    CommitDifference listChanges(@Nullable String authHeader, @Nullable String repo, @Nullable String source,
-                                 @Nullable String dest);
+    CommitDifference listChanges(@Nullable String authHeader, @Nullable String user, @Nullable String repo,
+                                 @Nullable String source, @Nullable String dest);
 
-    void merge(@Nullable String authHeader, @Nullable String repo, @Nullable String source,
+    void merge(@Nullable String authHeader, @Nullable String user, @Nullable String repo, @Nullable String source,
                @Nullable String dest, @Nullable String message);
 }

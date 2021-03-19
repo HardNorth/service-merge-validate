@@ -45,7 +45,9 @@ public class GithubServiceTest {
     private final GithubAuthClient githubAuthClient = mock(GithubAuthClient.class);
     private final GithubApiClient githubApiClient = mock(GithubApiClient.class);
 
-    public final Github github = new GithubService(httpClient, githubAuthClient, githubApiClient, new GithubCredentials(CLIENT_ID, CLIENT_SECRET), 512000, new Charset(StandardCharsets.UTF_8));
+    public final Github github =
+            new GithubService(httpClient, githubAuthClient, githubApiClient,
+                    new GithubCredentials(CLIENT_ID, CLIENT_SECRET), 512000, new Charset(StandardCharsets.UTF_8));
 
 
     @SuppressWarnings({"unchecked"})
@@ -54,7 +56,7 @@ public class GithubServiceTest {
         Response<JsonElement> response = mock(Response.class);
         when(call.execute()).thenReturn(response);
         when(response.isSuccessful()).thenReturn(Boolean.TRUE);
-        when(githubApiClient.getContent(anyString(), anyString(), eq(path), eq("dest"))).thenReturn(call);
+        when(githubApiClient.getContent(anyString(), anyString(), anyString(), eq(path), eq("dest"))).thenReturn(call);
         when(response.body()).thenReturn(responseBody);
         when(response.headers()).thenReturn(Headers.of());
     }
@@ -73,7 +75,7 @@ public class GithubServiceTest {
     @MethodSource("invalidConfigurationFileResponses")
     public <T extends HttpException> void verify_github_bad_merge_file_responses(String file, Class<T> exception, int status, String message) throws IOException {
         mockContentCall("", GSON.fromJson(readFileString(file), JsonElement.class));
-        T result = Assertions.assertThrows(exception, () -> github.getFileContent("auth", "HardNorth/test", "dest", MERGE_FILE_NAME));
+        T result = Assertions.assertThrows(exception, () -> github.getFileContent("auth", "HardNorth", "test", "dest", MERGE_FILE_NAME));
         assertThat(result.getCode(), equalTo(status));
         assertThat(result.getMessage(), Matchers.endsWith(message));
     }
@@ -84,7 +86,7 @@ public class GithubServiceTest {
         String content = readFileString("github/merge_file_default.json");
         mockContentCall(MERGE_FILE_NAME, GSON.fromJson(content, JsonElement.class));
 
-        String result = new String(github.getFileContent("auth", "HardNorth/test", "dest", MERGE_FILE_NAME), StandardCharsets.UTF_8);
+        String result = new String(github.getFileContent("auth", "HardNorth", "test", "dest", MERGE_FILE_NAME), StandardCharsets.UTF_8);
         String expected = readFileString("file/default.txt").replace("\r", "");
         assertThat(result, equalTo(expected));
     }
@@ -95,7 +97,7 @@ public class GithubServiceTest {
         Response<JsonObject> branchResponse = mock(Response.class);
         when(branchCall.execute()).thenReturn(branchResponse);
         when(branchResponse.isSuccessful()).thenReturn(Boolean.TRUE);
-        when(githubApiClient.getBranch(anyString(), anyString(), eq(branch))).thenReturn(branchCall);
+        when(githubApiClient.getBranch(anyString(), anyString(), anyString(), eq(branch))).thenReturn(branchCall);
         when(branchResponse.body()).thenReturn(responseBody);
         when(branchResponse.headers()).thenReturn(Headers.of());
     }
@@ -114,7 +116,7 @@ public class GithubServiceTest {
         Response<JsonObject> response = mock(Response.class);
         when(call.execute()).thenReturn(response);
         when(response.isSuccessful()).thenReturn(Boolean.TRUE);
-        when(githubApiClient.compareCommits(anyString(), anyString(), eq(masterBranchResponse.getAsJsonObject("commit").getAsJsonPrimitive("sha").getAsString()),
+        when(githubApiClient.compareCommits(anyString(), anyString(), anyString(), eq(masterBranchResponse.getAsJsonObject("commit").getAsJsonPrimitive("sha").getAsString()),
                 eq(developBranchResponse.getAsJsonObject("commit").getAsJsonPrimitive("sha").getAsString()))).thenReturn(call);
 
         when(response.body()).thenReturn(responseBody);
@@ -136,7 +138,7 @@ public class GithubServiceTest {
         String changesStr = readFileString(file);
         mockChangesCall("develop", "master", GSON.fromJson(changesStr, JsonObject.class));
 
-        CommitDifference result = github.listChanges("auth", "HardNorth/test", "develop", "master");
+        CommitDifference result = github.listChanges("auth", "HardNorth", "test", "develop", "master");
 
         assertThat(result.getAheadBy(), equalTo(expected.getAheadBy()));
         assertThat(result.getBehindBy(), equalTo(expected.getBehindBy()));

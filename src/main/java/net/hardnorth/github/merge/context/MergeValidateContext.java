@@ -8,6 +8,7 @@ import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.*;
 import net.hardnorth.github.merge.service.impl.*;
 import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -27,12 +28,19 @@ public class MergeValidateContext {
     @Produces
     @ApplicationScoped
     public OkHttpClient httpClient(@ConfigProperty(name = PropertyNames.GITHUB_TIMEOUT_UNIT) TimeUnit timeoutUnit,
-                                   @ConfigProperty(name = PropertyNames.GITHUB_TIMEOUT_VALUE) long timeoutValue) {
-        return new OkHttpClient.Builder()
-                .connectTimeout(timeoutValue, timeoutUnit)
+                                   @ConfigProperty(name = PropertyNames.GITHUB_TIMEOUT_VALUE) long timeoutValue,
+                                   @ConfigProperty(name = PropertyNames.GITHUB_LOG) boolean log) {
+        OkHttpClient.Builder builder = new OkHttpClient.Builder().connectTimeout(timeoutValue, timeoutUnit)
                 .readTimeout(timeoutValue, timeoutUnit)
-                .writeTimeout(timeoutValue, timeoutUnit)
-                .build();
+                .writeTimeout(timeoutValue, timeoutUnit);
+
+        if (log) {
+            HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+            interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+            builder.addInterceptor(interceptor);
+        }
+
+        return builder.build();
     }
 
     @Produces

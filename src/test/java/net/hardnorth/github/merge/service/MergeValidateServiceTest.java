@@ -23,7 +23,8 @@ import static org.mockito.Mockito.when;
 public class MergeValidateServiceTest {
     private static final String MERGE_FILE_NAME = ".merge-validate";
     private static final String AUTHORIZATION = "auth";
-    private static final String REPO = "HardNorth/test";
+    private static final String USER = "HardNorth";
+    private static final String REPO = "test";
     private static final String SOURCE_BRANCH = "source";
     private static final String DEST_BRANCH = "dest";
     private static final String WORKFLOW_FILE = ".github/workflows/ci.yml";
@@ -46,11 +47,11 @@ public class MergeValidateServiceTest {
     @ParameterizedTest
     @MethodSource("validResponses")
     public void verify_github_merge_success(String configFile, CommitDifference diff) {
-        when(github.getFileContent(eq(AUTHORIZATION), eq(REPO), eq(DEST_BRANCH), eq(MERGE_FILE_NAME)))
+        when(github.getFileContent(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(DEST_BRANCH), eq(MERGE_FILE_NAME)))
                 .thenReturn(IoUtils.readInputStreamToBytes(getClass().getClassLoader().getResourceAsStream(configFile)));
-        when(github.listChanges(eq(AUTHORIZATION), eq(REPO), eq(DEST_BRANCH), eq(SOURCE_BRANCH)))
+        when(github.listChanges(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(DEST_BRANCH), eq(SOURCE_BRANCH)))
                 .thenReturn(diff);
-        service.merge(AUTHORIZATION, REPO, SOURCE_BRANCH, DEST_BRANCH);
+        service.merge(AUTHORIZATION, USER, REPO, SOURCE_BRANCH, DEST_BRANCH);
     }
 
     public static final List<FileChange> CHANGES = Arrays.asList(new FileChange(FileChange.Type.CHANGED, ".github/workflows/release.yml"),
@@ -75,12 +76,13 @@ public class MergeValidateServiceTest {
     @ParameterizedTest
     @MethodSource("invalidDiffResponses")
     public void verify_invalid_diff_responses(String expectedMessage, CommitDifference response) {
-        when(github.getFileContent(eq(AUTHORIZATION), eq(REPO), eq(DEST_BRANCH), eq(MERGE_FILE_NAME)))
+        when(github.getFileContent(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(DEST_BRANCH), eq(MERGE_FILE_NAME)))
                 .thenReturn(DEFAULT_MERGE_CONFIG_FILE);
-        when(github.listChanges(eq(AUTHORIZATION), eq(REPO), eq(DEST_BRANCH), eq(SOURCE_BRANCH)))
+        when(github.listChanges(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(DEST_BRANCH), eq(SOURCE_BRANCH)))
                 .thenReturn(response);
 
-        IllegalArgumentException result = Assertions.assertThrows(IllegalArgumentException.class, () -> service.merge(AUTHORIZATION, REPO, SOURCE_BRANCH, DEST_BRANCH));
+        IllegalArgumentException result = Assertions.assertThrows(IllegalArgumentException.class,
+                () -> service.merge(AUTHORIZATION, USER, REPO, SOURCE_BRANCH, DEST_BRANCH));
         assertThat(result.getMessage(), Matchers.endsWith(expectedMessage));
     }
 
@@ -98,12 +100,13 @@ public class MergeValidateServiceTest {
         byte[] configFile =
                 IoUtils.readInputStreamToBytes(getClass().getClassLoader().getResourceAsStream(configFilePath));
 
-        when(github.getFileContent(eq(AUTHORIZATION), eq(REPO), eq(DEST_BRANCH), eq(MERGE_FILE_NAME)))
+        when(github.getFileContent(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(DEST_BRANCH), eq(MERGE_FILE_NAME)))
                 .thenReturn(configFile);
-        when(github.listChanges(eq(AUTHORIZATION), eq(REPO), eq(DEST_BRANCH), eq(SOURCE_BRANCH)))
+        when(github.listChanges(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(DEST_BRANCH), eq(SOURCE_BRANCH)))
                 .thenReturn(difference);
 
-        IllegalArgumentException result = Assertions.assertThrows(IllegalArgumentException.class, () -> service.merge(AUTHORIZATION, REPO, SOURCE_BRANCH, DEST_BRANCH));
+        IllegalArgumentException result = Assertions.assertThrows(IllegalArgumentException.class,
+                () -> service.merge(AUTHORIZATION, USER, REPO, SOURCE_BRANCH, DEST_BRANCH));
         assertThat(result.getMessage(), Matchers.endsWith("illegal changes"));
     }
 }

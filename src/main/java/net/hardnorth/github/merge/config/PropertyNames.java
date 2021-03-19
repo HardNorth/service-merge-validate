@@ -11,6 +11,7 @@ public class PropertyNames {
     public static final String CHARSET = "net.hardnorth.application.charset";
 
     // Github
+    public static final String GITHUB_LOG = "net.hardnorth.github.http.log";
     public static final String GITHUB_BASE_URL = "net.hardnorth.github.root.url";
     public static final String GITHUB_API_URL = "net.hardnorth.github.api.url";
     public static final String GITHUB_AUTHORIZE_URL = "net.hardnorth.github.oauth.authorize.url";

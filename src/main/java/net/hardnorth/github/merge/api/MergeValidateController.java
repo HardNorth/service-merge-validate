@@ -55,10 +55,10 @@ public class MergeValidateController {
     @Path("merge")
     @Consumes
     @Produces
-    public void merge(@HeaderParam(value = "Authorization") String auth, @QueryParam("repoRef") String repoRef,
-                      @QueryParam("from") String from, @QueryParam("to") String to) {
+    public void merge(@HeaderParam(value = "Authorization") String auth, @QueryParam("user") String user,
+                      @QueryParam("repo") String repo, @QueryParam("from") String from, @QueryParam("to") String to) {
         String authToken = WebServiceCommon.getAuthToken(auth);
         String githubToken = authService.authenticate(authToken);
-        mergeService.merge(githubToken, repoRef, from, to);
+        mergeService.merge(githubToken, user, repo, from, to);
     }
 }

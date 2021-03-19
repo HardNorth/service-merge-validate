@@ -4,6 +4,7 @@ import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
 import net.hardnorth.github.merge.config.PropertyNames;
 import net.hardnorth.github.merge.service.SecretManager;
+import net.hardnorth.github.merge.utils.IoUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Collections;
 
 import static io.restassured.RestAssured.given;
@@ -45,7 +45,9 @@ public class MergeValidateControllerTest {
         when(secretManager.getSecrets(eq(TEST_CLIENT_ID), eq(GITHUB_CLIENT_TOKEN)))
                 .thenReturn(Arrays.asList(TEST_CLIENT_ID, GITHUB_CLIENT_TOKEN));
         when(secretManager.getSecrets(eq(GITHUB_ENCRYPTION_KEY)))
-                .thenReturn(Collections.singletonList(Base64.getEncoder().encodeToString(GITHUB_ENCRYPTION_KEY.getBytes(StandardCharsets.UTF_8))));
+                .thenReturn(Collections.singletonList(IoUtils.readInputStreamToString(
+                        Thread.currentThread().getContextClassLoader().getResourceAsStream("encryption/key.json"), StandardCharsets.UTF_8)
+                ));
         QuarkusMock.installMockForType(secretManager, SecretManager.class);
     }
 
@@ -89,7 +91,8 @@ public class MergeValidateControllerTest {
         given()
                 .when()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_NOT_EXISTING_TOKEN)
-                .queryParam("repoRef", "HardNorth/agent-java-testNG")
+                .queryParam("user", "HardNorth")
+                .queryParam("repo", "agent-java-testNG")
                 .queryParam("from", "develop")
                 .queryParam("to", "master")
                 .put("/merge")
