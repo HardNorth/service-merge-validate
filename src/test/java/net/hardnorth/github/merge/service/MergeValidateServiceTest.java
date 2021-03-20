@@ -49,7 +49,7 @@ public class MergeValidateServiceTest {
     public void verify_github_merge_success(String configFile, CommitDifference diff) {
         when(github.getFileContent(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(DEST_BRANCH), eq(MERGE_FILE_NAME)))
                 .thenReturn(IoUtils.readInputStreamToBytes(getClass().getClassLoader().getResourceAsStream(configFile)));
-        when(github.listChanges(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(DEST_BRANCH), eq(SOURCE_BRANCH)))
+        when(github.listChanges(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(SOURCE_BRANCH), eq(DEST_BRANCH)))
                 .thenReturn(diff);
         service.merge(AUTHORIZATION, USER, REPO, SOURCE_BRANCH, DEST_BRANCH);
     }
@@ -78,7 +78,7 @@ public class MergeValidateServiceTest {
     public void verify_invalid_diff_responses(String expectedMessage, CommitDifference response) {
         when(github.getFileContent(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(DEST_BRANCH), eq(MERGE_FILE_NAME)))
                 .thenReturn(DEFAULT_MERGE_CONFIG_FILE);
-        when(github.listChanges(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(DEST_BRANCH), eq(SOURCE_BRANCH)))
+        when(github.listChanges(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(SOURCE_BRANCH), eq(DEST_BRANCH)))
                 .thenReturn(response);
 
         IllegalArgumentException result = Assertions.assertThrows(IllegalArgumentException.class,
@@ -102,7 +102,7 @@ public class MergeValidateServiceTest {
 
         when(github.getFileContent(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(DEST_BRANCH), eq(MERGE_FILE_NAME)))
                 .thenReturn(configFile);
-        when(github.listChanges(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(DEST_BRANCH), eq(SOURCE_BRANCH)))
+        when(github.listChanges(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(SOURCE_BRANCH), eq(DEST_BRANCH)))
                 .thenReturn(difference);
 
         IllegalArgumentException result = Assertions.assertThrows(IllegalArgumentException.class,

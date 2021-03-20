@@ -40,7 +40,7 @@ public class GithubOAuthService implements OAuthService {
             new AuthenticationFailedException("Invalid authentication token");
 
     public static final String DEFAULT_GITHUB_OAUTH_URL = "https://github.com/login/oauth/authorize";
-    public static final List<String> SCOPES = Arrays.asList("repo", "user:email");
+    public static final List<String> SCOPES = Collections.singletonList("repo");
 
     public static final String REDIRECT_URI_PATTERN = "%s/integration/result?authUuid=%s";
     private static final String AUTHORIZATION_KIND = "github-oauth";
@@ -135,9 +135,9 @@ public class GithubOAuthService implements OAuthService {
         URIBuilder uriBuilder;
         try {
             uriBuilder = new URIBuilder(githubOAuthUrl);
+            uriBuilder.addParameter("scope", StringUtils.joinWith(" ", SCOPES.toArray()));
             uriBuilder.addParameter("redirect_uri", String.format(REDIRECT_URI_PATTERN, baseUrl, authTokenStr));
             uriBuilder.addParameter("client_id", credentials.getId());
-            uriBuilder.addParameter("scope", StringUtils.joinWith(" ", SCOPES.toArray()));
             uriBuilder.addParameter(STATE, stateUuid);
             return uriBuilder.toString();
         } catch (URISyntaxException e) {

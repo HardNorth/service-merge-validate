@@ -38,7 +38,7 @@ public class MergeValidateService implements MergeValidate {
         ValidationPattern pattern = ValidationPattern.parse(mergeFileContent);
         strictRules.forEach(pattern::addRule);
 
-        CommitDifference difference = client.listChanges(authHeader, user, repo, to, from);
+        CommitDifference difference = client.listChanges(authHeader, user, repo, from, to);
         if (difference.getBehindBy() > 0) {
             throw NOT_FAST_FORWARD;
         }

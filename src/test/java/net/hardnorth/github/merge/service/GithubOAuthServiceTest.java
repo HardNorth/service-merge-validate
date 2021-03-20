@@ -70,7 +70,7 @@ public class GithubOAuthServiceTest {
         assertThat(query, hasEntry(equalTo("redirect_uri"), startsWith(SERVICE_URL + "/integration/result")));
         assertThat(query, hasEntry(equalTo("state"), not(emptyOrNullString())));
         assertThat(query, hasEntry(equalTo("client_id"), equalTo(CLIENT_ID)));
-        assertThat(query, hasEntry(equalTo("scope"), equalTo("repo user:email")));
+        assertThat(query, hasEntry(equalTo("scope"), equalTo("repo")));
     }
 
     @Test
