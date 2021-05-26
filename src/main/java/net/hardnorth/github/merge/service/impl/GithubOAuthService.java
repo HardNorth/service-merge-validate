@@ -15,7 +15,6 @@ import net.hardnorth.github.merge.service.OAuthService;
 import net.hardnorth.github.merge.utils.KeyType;
 import net.hardnorth.github.merge.utils.Keys;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.http.client.utils.URIBuilder;
 import org.jboss.logging.Logger;
@@ -102,32 +101,29 @@ public class GithubOAuthService implements OAuthService {
         }
     }
 
-    private Pair<Token, String> generateAuthToken() {
-        Token token = new Token(UUID.randomUUID());
-        String salt = BCrypt.gensalt(12);
-        String authUuidHash = BCrypt.hashpw(token.getValue(), salt);
-        return Pair.of(token, authUuidHash);
+    private Token generateAuthToken() {
+        return new Token(UUID.randomUUID());
     }
 
-    private String generateTokenString(Key authKey, byte[] tokenBytes) {
+    private String generateTokenString(Key authKey, Token token) {
         Object bareKey = authKey.getNameOrId();
         KeyType type = KeyType.getKeyType(bareKey);
         byte[] keyBytes = Keys.getKeyBytes(bareKey, charset);
-        return encodeAuthToken(type, keyBytes, tokenBytes);
+        return encodeAuthToken(type, keyBytes, token);
     }
 
     @Override
     @Nonnull
     public String createIntegration() {
-        Pair<Token, String> tokenHash = generateAuthToken();
+        Token token = generateAuthToken();
         Key authKey = datastore.allocateId(authorizationKeyFactory.newKey());
-        String authTokenStr = generateTokenString(authKey, tokenHash.getLeft().getValue());
+        String authTokenStr = generateTokenString(authKey, token);
 
         Calendar expireTime = Calendar.getInstance();
         expireTime.add(Calendar.HOUR, 1);
         String stateUuid = UUID.randomUUID().toString();
         Entity auth = Entity.newBuilder(authKey)
-                .set(AUTH_HASH, tokenHash.getRight())
+                .set(AUTH_HASH, token.getHash())
                 .set(EXPIRES, Timestamp.of(expireTime.getTime()))
                 .set(STATE, stateUuid)
                 .build();
@@ -168,15 +164,17 @@ public class GithubOAuthService implements OAuthService {
         String githubAuthenticationStr = github.loginApplication(code, state);
 
         // Generate new authentication data
-        Pair<Token, String> userTokenHash = generateAuthToken();
+        Token userToken = generateAuthToken();
         Key userAuthKey = datastore.allocateId(integrationKeyFactory.newKey());
-        String userTokenStr = generateTokenString(userAuthKey, userTokenHash.getLeft().getValue());
+        String userTokenStr = generateTokenString(userAuthKey, userToken);
 
         Entity integration = Entity.newBuilder(userAuthKey)
-                .set(AUTH_HASH, userTokenHash.getRight())
+                .set(AUTH_HASH, userToken.getHash())
                 .set(CREATION_DATE, now)
                 .set(ACCESS_DATE, now)
-                .set(INTEGRATION_DATA, Base64.getEncoder().encodeToString(encryption.encrypt(githubAuthenticationStr.getBytes(charset), userTokenHash.getLeft().getValue())))
+                .set(INTEGRATION_DATA, Base64.getEncoder()
+                        .encodeToString(encryption.encrypt(githubAuthenticationStr.getBytes(charset),
+                                userToken.getValue())))
                 .build();
         datastore.add(integration);
         return userTokenStr;

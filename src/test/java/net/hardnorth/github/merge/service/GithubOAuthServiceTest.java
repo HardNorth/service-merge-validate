@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import io.quarkus.security.AuthenticationFailedException;
 import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.model.GithubCredentials;
+import net.hardnorth.github.merge.model.Token;
 import net.hardnorth.github.merge.service.impl.GithubOAuthService;
 import net.hardnorth.github.merge.utils.KeyType;
 import net.hardnorth.github.merge.utils.Keys;
@@ -214,8 +215,8 @@ public class GithubOAuthServiceTest {
     }
 
     private static String[] randomTokens() {
-        return new String[]{Keys.encodeAuthToken(KeyType.STRING, Keys.getBytes(UUID.randomUUID()), Keys.getBytes(UUID.randomUUID())),
-                Keys.encodeAuthToken(KeyType.LONG, Keys.getKeyBytes(new Random().nextLong(), CHARSET.getValue()), Keys.getBytes(UUID.randomUUID()))};
+        return new String[]{Keys.encodeAuthToken(KeyType.STRING, Keys.getBytes(UUID.randomUUID()), new Token(UUID.randomUUID())),
+                Keys.encodeAuthToken(KeyType.LONG, Keys.getKeyBytes(new Random().nextLong(), CHARSET.getValue()), new Token(UUID.randomUUID()))};
     }
 
     @ParameterizedTest

@@ -28,15 +28,15 @@ public class KeysTest {
 
     @Test
     public void verify_token_encode_decode() {
-        UUID token = UUID.randomUUID();
-        byte[] tokenBytes = Keys.getBytes(token);
+        UUID tokenUUID = UUID.randomUUID();
+        Token token = new Token(tokenUUID);
 
         long key = new Random().nextLong();
         byte[] keyBytes = BigInteger.valueOf(key).toByteArray();
 
         KeyType type = KeyType.LONG;
 
-        String encodedToken = Keys.encodeAuthToken(type, keyBytes, tokenBytes);
+        String encodedToken = Keys.encodeAuthToken(type, keyBytes, token);
         assertThat(encodedToken.length(), greaterThan(0));
 
         Triple<KeyType, byte[], Token> decodedToken = Keys.decodeAuthToken(encodedToken);
@@ -45,7 +45,7 @@ public class KeysTest {
         assertThat(new BigInteger(decodedToken.getMiddle()).longValue(), equalTo(key));
 
         String tokenBytesResult = Hex.encodeHexString(decodedToken.getRight().getValue());
-        assertThat(tokenBytesResult, equalTo(token.toString().replace("-", "")));
+        assertThat(tokenBytesResult, equalTo(tokenUUID.toString().replace("-", "")));
     }
 
     private static String[] invalidTokens() {

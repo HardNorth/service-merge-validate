@@ -61,4 +61,12 @@ public class MergeValidateController {
         String githubToken = authService.authenticate(authToken);
         mergeService.merge(githubToken, user, repo, from, to);
     }
+
+    @POST
+    @Path("webhook")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces
+    public void webhookAction(@HeaderParam(value = "x-hub-signature-256") String signature) {
+
+    }
 }

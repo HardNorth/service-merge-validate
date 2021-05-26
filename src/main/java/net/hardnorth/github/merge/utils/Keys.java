@@ -51,12 +51,12 @@ public class Keys {
     }
 
     @Nonnull
-    public static String encodeAuthToken(@Nonnull KeyType type, @Nonnull byte[] keyBytes, @Nonnull byte[] authUuidBytes) {
-        byte[] authToken = new byte[keyBytes.length + authUuidBytes.length + 2];
+    public static String encodeAuthToken(@Nonnull KeyType type, @Nonnull byte[] keyBytes, Token token) {
+        byte[] authToken = new byte[keyBytes.length + token.getValue().length + 2];
         authToken[0] = (byte) type.ordinal();
         authToken[1] = (byte) keyBytes.length;
         System.arraycopy(keyBytes, 0, authToken, 2, keyBytes.length);
-        System.arraycopy(authUuidBytes, 0, authToken, 2 + keyBytes.length, authUuidBytes.length);
+        System.arraycopy(token.getValue(), 0, authToken, 2 + keyBytes.length, token.getValue().length);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(authToken);
     }
 
