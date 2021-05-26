@@ -5,6 +5,7 @@ import net.hardnorth.github.merge.service.OAuthService;
 import net.hardnorth.github.merge.utils.WebServiceCommon;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
+import org.jboss.logging.Logger;
 
 import javax.annotation.Nonnull;
 import javax.ws.rs.*;
@@ -14,6 +15,8 @@ import java.nio.charset.StandardCharsets;
 
 @Path("/")
 public class MergeValidateController {
+    private static final Logger LOGGER = Logger.getLogger(MergeValidateController.class);
+
     private final OAuthService authService;
     private final MergeValidate mergeService;
 
@@ -66,7 +69,7 @@ public class MergeValidateController {
     @Path("webhook")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces
-    public void webhookAction(@HeaderParam(value = "x-hub-signature-256") String signature) {
-
+    public void webhookAction(@HeaderParam(value = "x-hub-signature-256") String signature, String body) {
+        LOGGER.info("Got a webhook request:\n" + body); // TODO: finish
     }
 }
