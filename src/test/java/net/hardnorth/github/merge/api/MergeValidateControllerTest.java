@@ -10,6 +10,7 @@ import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import javax.ws.rs.core.MediaType;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
@@ -99,5 +100,16 @@ public class MergeValidateControllerTest {
                 .then()
                 .statusCode(HttpStatus.SC_UNAUTHORIZED)
                 .header(HttpHeaders.WWW_AUTHENTICATE, startsWith("Bearer "));
+    }
+
+    @Test
+    public void web_hook_test() {
+        given()
+                .body(getClass().getClassLoader().getResourceAsStream("hook/new_installation.json"))
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .when()
+                .post("/webhook")
+                .then()
+                .statusCode(HttpStatus.SC_NO_CONTENT);
     }
 }
