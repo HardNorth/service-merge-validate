@@ -10,7 +10,7 @@ import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.model.Token;
 import net.hardnorth.github.merge.service.impl.GithubOAuthService;
-import net.hardnorth.github.merge.utils.KeyType;
+import net.hardnorth.github.merge.model.KeyType;
 import net.hardnorth.github.merge.utils.Keys;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;

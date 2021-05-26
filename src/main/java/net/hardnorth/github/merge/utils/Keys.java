@@ -1,5 +1,6 @@
 package net.hardnorth.github.merge.utils;
 
+import net.hardnorth.github.merge.model.KeyType;
 import net.hardnorth.github.merge.model.Token;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;

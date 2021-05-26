@@ -1,4 +1,4 @@
-package net.hardnorth.github.merge.utils;
+package net.hardnorth.github.merge.model;
 
 public enum KeyType {
     LONG, STRING;

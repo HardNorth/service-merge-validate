@@ -12,7 +12,7 @@ import net.hardnorth.github.merge.model.Token;
 import net.hardnorth.github.merge.service.EncryptionService;
 import net.hardnorth.github.merge.service.Github;
 import net.hardnorth.github.merge.service.OAuthService;
-import net.hardnorth.github.merge.utils.KeyType;
+import net.hardnorth.github.merge.model.KeyType;
 import net.hardnorth.github.merge.utils.Keys;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
