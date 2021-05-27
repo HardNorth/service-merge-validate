@@ -71,8 +71,15 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public SecretManager googleSecretManager(@ConfigProperty(name = PropertyNames.PROJECT_ID) String projectId) {
-        return new GoogleSecretManager(projectId);
+    public Charset applicationCharset(@ConfigProperty(name = PropertyNames.CHARSET) String charsetName) {
+        return new Charset(java.nio.charset.Charset.forName(charsetName));
+    }
+
+    @Produces
+    @ApplicationScoped
+    public SecretManager googleSecretManager(@ConfigProperty(name = PropertyNames.PROJECT_ID) String projectId,
+                                             Charset charset) {
+        return new GoogleSecretManager(projectId, charset);
     }
 
     @Produces
@@ -82,12 +89,6 @@ public class MergeValidateContext {
                                                @ConfigProperty(name = PropertyNames.GITHUB_CLIENT_TOKEN_SECRET) String tokenSecret) {
         List<String> secrets = secretManager.getSecrets(idSecret, tokenSecret);
         return new GithubCredentials(secrets.get(0), secrets.get(1));
-    }
-
-    @Produces
-    @ApplicationScoped
-    public Charset applicationCharset(@ConfigProperty(name = PropertyNames.CHARSET) String charsetName) {
-        return new Charset(java.nio.charset.Charset.forName(charsetName));
     }
 
     @Produces
@@ -127,7 +128,7 @@ public class MergeValidateContext {
     @Produces
     @ApplicationScoped
     public EncryptionService tinkEncryptionService(SecretManager secretManager,
-                                                   @ConfigProperty(name = PropertyNames.GITHUB_ENCRYPTION_KEY_SECRET) String keyName)
+                                                   @ConfigProperty(name = PropertyNames.ENCRYPTION_KEY_SECRET) String keyName)
             throws GeneralSecurityException {
         return new TinkEncryptionService(secretManager, keyName);
     }

@@ -1,13 +1,15 @@
 package net.hardnorth.github.merge.api;
 
-import net.hardnorth.github.merge.service.MergeValidate;
-import net.hardnorth.github.merge.service.OAuthService;
+import io.quarkus.security.AuthenticationFailedException;
+import net.hardnorth.github.merge.config.PropertyNames;
+import net.hardnorth.github.merge.model.Charset;
+import net.hardnorth.github.merge.service.SecretManager;
 import net.hardnorth.github.merge.utils.WebServiceCommon;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpStatus;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import javax.annotation.Nonnull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -17,13 +19,14 @@ import java.nio.charset.StandardCharsets;
 public class MergeValidateController {
     private static final Logger LOGGER = Logger.getLogger(MergeValidateController.class);
 
-    private final OAuthService authService;
-    private final MergeValidate mergeService;
+    private final java.nio.charset.Charset charset;
+    private final byte[] webhookSecret;
 
     @SuppressWarnings("CdiInjectionPointsInspection")
-    public MergeValidateController(OAuthService authorizationService, MergeValidate mergeValidateService) {
-        authService = authorizationService;
-        mergeService = mergeValidateService;
+    public MergeValidateController(SecretManager secretManager, Charset serviceCharset,
+                                   @ConfigProperty(name = PropertyNames.GITHUB_WEBHOOK_TOKEN_SECRET) String webhookSecretKey) {
+        charset = serviceCharset.getValue();
+        webhookSecret = secretManager.getRawSecret(webhookSecretKey);
     }
 
     @GET
@@ -34,42 +37,19 @@ public class MergeValidateController {
     }
 
     @POST
-    @Path("integration")
-    @Consumes
-    @Produces
-    public Response createIntegration() {
-        // see: https://docs.github.com/en/free-pro-team@latest/developers/apps/authorizing-oauth-apps
-        return WebServiceCommon.performRedirect(authService.createIntegration()); // return redirect URL in headers, authUuid
-    }
-
-    @GET
-    @Path("integration/result")
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response integrationResult(@Nonnull @QueryParam("authUuid") String authUuid, @Nonnull @QueryParam("state") String state,
-                                      @Nonnull @QueryParam("code") String code) {
-        String userToken = authService.authorize(authUuid, code, state);
-        return Response.status(HttpStatus.SC_OK)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                .encoding(StandardCharsets.UTF_8.name())
-                .entity(userToken).build();
-    }
-
-    @PUT
-    @Path("merge")
-    @Consumes
-    @Produces
-    public void merge(@HeaderParam(value = "Authorization") String auth, @QueryParam("user") String user,
-                      @QueryParam("repo") String repo, @QueryParam("from") String from, @QueryParam("to") String to) {
-        String authToken = WebServiceCommon.getAuthToken(auth);
-        String githubToken = authService.authenticate(authToken);
-        mergeService.merge(githubToken, user, repo, from, to);
-    }
-
-    @POST
     @Path("webhook")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces
     public void webhookAction(@HeaderParam(value = "x-hub-signature-256") String signature, String body) {
+        byte[] rawSignature;
+        try {
+            rawSignature = Hex.decodeHex(signature.substring("sha256=".length()));
+        } catch (DecoderException e) {
+            throw new IllegalArgumentException("Invalid signature format: " + e.getMessage(), e);
+        }
+        if(!WebServiceCommon.validateSha256Signature(rawSignature, webhookSecret, body.getBytes(StandardCharsets.UTF_8))) {
+            throw new AuthenticationFailedException("Invalid signature");
+        }
         LOGGER.info("Got a webhook request:\n" + body); // TODO: finish
     }
 }

@@ -5,6 +5,7 @@ import com.google.cloud.secretmanager.v1.*;
 import com.google.protobuf.ByteString;
 import net.hardnorth.github.merge.exception.ConnectionException;
 import net.hardnorth.github.merge.exception.NotFoundException;
+import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.service.SecretManager;
 import org.apache.http.HttpStatus;
 
@@ -21,14 +22,17 @@ public class GoogleSecretManager implements SecretManager {
     private static final String VERSION_ID = "latest";
 
     private final String projectName;
+    private final java.nio.charset.Charset charset;
 
-    public GoogleSecretManager(String projectId) {
+    public GoogleSecretManager(String projectId, Charset serviceCharset)
+    {
         projectName = projectId;
+        charset = serviceCharset.getValue();
     }
 
     @Override
     @Nonnull
-    public List<String> getSecrets(@Nullable String... names) {
+    public List<byte[]> getRawSecrets(@Nullable String... names) {
         if (names == null) {
             return Collections.emptyList();
         }
@@ -36,7 +40,8 @@ public class GoogleSecretManager implements SecretManager {
             return Arrays.stream(names)
                     .map(n -> {
                         try {
-                            return client.accessSecretVersion(SecretVersionName.of(projectName, n, VERSION_ID)).getPayload().getData().toStringUtf8();
+                            return client.accessSecretVersion(SecretVersionName.of(projectName, n, VERSION_ID))
+                                    .getPayload().getData().toByteArray();
                         } catch (ApiException e) {
                             if (HttpStatus.SC_NOT_FOUND == e.getStatusCode().getCode().getHttpStatusCode()) {
                                 throw new NotFoundException("Secret not found: " + n);
@@ -49,6 +54,12 @@ public class GoogleSecretManager implements SecretManager {
         } catch (IOException e) {
             throw new ConnectionException(e.getMessage(), e);
         }
+    }
+
+    @Override
+    @Nonnull
+    public List<String> getSecrets(@Nullable String... names) {
+        return getRawSecrets(names).stream().map(s->new String(s, charset)).collect(Collectors.toList());
     }
 
     @Override

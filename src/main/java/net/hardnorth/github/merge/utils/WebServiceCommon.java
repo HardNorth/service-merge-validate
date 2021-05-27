@@ -8,12 +8,19 @@ import org.apache.http.HttpStatus;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class WebServiceCommon {
     public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSX";
+
+    public static final String HMAC_ALGORITHM = "HmacSHA256";
 
     public static final Gson GSON = new Gson().newBuilder().serializeNulls().setDateFormat(DATE_FORMAT).create();
 
@@ -55,5 +62,22 @@ public class WebServiceCommon {
             return null;
         }
         return token;
+    }
+
+    public static boolean validateSha256Signature(byte[] signature, byte[] secret, byte[] body) {
+        Mac mac;
+        try {
+            mac = Mac.getInstance(HMAC_ALGORITHM);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Unable to find " + HMAC_ALGORITHM + " algorithm:", e);
+        }
+        SecretKeySpec key = new SecretKeySpec(secret, HMAC_ALGORITHM);
+        try {
+            mac.init(key);
+        } catch (InvalidKeyException e) {
+            throw new RuntimeException("Invalid key:", e);
+        }
+        byte[] actualSignature = mac.doFinal(body);
+        return MessageDigest.isEqual(signature, actualSignature);
     }
 }

@@ -9,6 +9,7 @@ public class PropertyNames {
     public static final String APPLICATION_URL = "net.hardnorth.application.url";
     public static final String PROJECT_ID = "net.hardnorth.application.project";
     public static final String CHARSET = "net.hardnorth.application.charset";
+    public static final String ENCRYPTION_KEY_SECRET = "net.hardnorth.encryption.key.secret";
 
     // Github
     public static final String GITHUB_LOG = "net.hardnorth.github.http.log";
@@ -17,7 +18,8 @@ public class PropertyNames {
     public static final String GITHUB_AUTHORIZE_URL = "net.hardnorth.github.oauth.authorize.url";
     public static final String GITHUB_CLIENT_ID_SECRET = "net.hardnorth.github.oauth.client.id.secret";
     public static final String GITHUB_CLIENT_TOKEN_SECRET = "net.hardnorth.github.oauth.client.token.secret";
-    public static final String GITHUB_ENCRYPTION_KEY_SECRET = "net.hardnorth.github.oauth.encryption.key.secret";
+    public static final String GITHUB_RSA_KEY_SECRET = "net.hardnorth.github.rsa.key.secret";
+    public static final String GITHUB_WEBHOOK_TOKEN_SECRET = "net.hardnorth.github.webhook.token.secret";
     public static final String GITHUB_TIMEOUT_UNIT = "net.hardnorth.github.timeout.unit";
     public static final String GITHUB_TIMEOUT_VALUE = "net.hardnorth.github.timeout.value";
     public static final String GITHUB_FILE_SIZE_LIMIT = "net.hardnorth.github.file.size.limit";
