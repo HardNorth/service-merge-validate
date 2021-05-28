@@ -3,6 +3,7 @@ package net.hardnorth.github.merge.utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 
@@ -44,6 +45,10 @@ public class WebServiceCommon {
 
     public static JsonArray asJson(Object[] array) {
         return GSON.toJsonTree(array).getAsJsonArray();
+    }
+
+    public static JsonObject asJson(Object object) {
+        return GSON.toJsonTree(object).getAsJsonObject();
     }
 
     public static String asString(JsonElement json) {
