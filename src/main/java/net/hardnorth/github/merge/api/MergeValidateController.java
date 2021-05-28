@@ -40,7 +40,8 @@ public class MergeValidateController {
     @Path("webhook")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces
-    public void webhookAction(@HeaderParam(value = "x-hub-signature-256") String signature, String body) {
+    public void webhookAction(@HeaderParam(value = "x-github-event") String event,
+                              @HeaderParam(value = "x-hub-signature-256") String signature, String body) {
         byte[] rawSignature;
         try {
             rawSignature = Hex.decodeHex(signature.substring("sha256=".length()));
