@@ -132,4 +132,10 @@ public class MergeValidateContext {
             throws GeneralSecurityException {
         return new TinkEncryptionService(secretManager, keyName);
     }
+
+    @Produces
+    @ApplicationScoped
+    public GithubWebhook githubWebhookService(MergeValidate mergeValidate) {
+        return new GithubWebhookService(mergeValidate);
+    }
 }

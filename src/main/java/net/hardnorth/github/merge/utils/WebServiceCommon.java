@@ -51,6 +51,10 @@ public class WebServiceCommon {
         return GSON.toJsonTree(object).getAsJsonObject();
     }
 
+    public static <T> T deserializeJson(String json, Class<T> type) {
+        return GSON.fromJson(json, type);
+    }
+
     public static String asString(JsonElement json) {
         return GSON.toJson(json);
     }

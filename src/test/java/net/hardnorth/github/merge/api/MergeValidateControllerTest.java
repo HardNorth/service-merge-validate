@@ -56,6 +56,7 @@ public class MergeValidateControllerTest {
                 .body(getClass().getClassLoader().getResourceAsStream("hook/new_installation.json"))
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .header("x-hub-signature-256","sha256=2a30244bfdbd9025f674fb9e18f54ca9b0ff773934ab5d08c416be7f03309122")
+                .header("x-github-event", "installation")
                 .when()
                 .post("/webhook")
                 .then()
