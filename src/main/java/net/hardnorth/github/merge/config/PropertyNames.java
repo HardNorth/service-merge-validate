@@ -16,8 +16,6 @@ public class PropertyNames {
     public static final String GITHUB_BASE_URL = "net.hardnorth.github.root.url";
     public static final String GITHUB_API_URL = "net.hardnorth.github.api.url";
     public static final String GITHUB_APP_ID = "net.hardnorth.github.app.id";
-    public static final String GITHUB_CLIENT_ID_SECRET = "net.hardnorth.github.oauth.client.id.secret";
-    public static final String GITHUB_CLIENT_TOKEN_SECRET = "net.hardnorth.github.oauth.client.token.secret";
     public static final String GITHUB_RSA_KEY_SECRET = "net.hardnorth.github.rsa.key.secret";
     public static final String GITHUB_WEBHOOK_TOKEN_SECRET = "net.hardnorth.github.webhook.token.secret";
     public static final String GITHUB_TIMEOUT_UNIT = "net.hardnorth.github.timeout.unit";

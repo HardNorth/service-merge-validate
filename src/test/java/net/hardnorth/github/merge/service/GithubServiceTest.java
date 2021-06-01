@@ -1,22 +1,18 @@
 package net.hardnorth.github.merge.service;
 
-import com.auth0.jwt.algorithms.Algorithm;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.hardnorth.github.merge.exception.HttpException;
-import net.hardnorth.github.merge.model.*;
+import net.hardnorth.github.merge.model.Charset;
+import net.hardnorth.github.merge.model.CommitDifference;
+import net.hardnorth.github.merge.model.FileChange;
 import net.hardnorth.github.merge.service.impl.GithubService;
 import net.hardnorth.github.merge.utils.IoUtils;
 import okhttp3.Headers;
-import okhttp3.OkHttpClient;
 import org.apache.http.HttpStatus;
-import org.bouncycastle.openssl.PEMKeyPair;
-import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -24,12 +20,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyPair;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.IntStream;
@@ -43,17 +34,13 @@ import static org.mockito.Mockito.when;
 
 public class GithubServiceTest {
     public static final String MERGE_FILE_NAME = ".merge-validate";
-    public static final String CLIENT_ID = "test-client-id";
-    public static final String CLIENT_SECRET = "test-client-secret";
 
     private static final Gson GSON = new Gson();
 
-    private final OkHttpClient httpClient = mock(OkHttpClient.class);
     private final GithubApiClient githubApiClient = mock(GithubApiClient.class);
 
     public final Github github =
-            new GithubService(httpClient, githubApiClient,
-                    new GithubCredentials(CLIENT_ID, CLIENT_SECRET), 512000, new Charset(StandardCharsets.UTF_8));
+            new GithubService(githubApiClient, 512000, new Charset(StandardCharsets.UTF_8));
 
     @SuppressWarnings({"unchecked"})
     private void mockContentCall(String path, JsonElement responseBody) throws IOException {

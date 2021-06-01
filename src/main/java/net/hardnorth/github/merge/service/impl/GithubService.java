@@ -9,10 +9,8 @@ import net.hardnorth.github.merge.exception.HttpException;
 import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.model.CommitDifference;
 import net.hardnorth.github.merge.model.FileChange;
-import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.Github;
 import net.hardnorth.github.merge.service.GithubApiClient;
-import okhttp3.OkHttpClient;
 import org.apache.http.HttpStatus;
 import retrofit2.Response;
 
@@ -68,18 +66,13 @@ public class GithubService implements Github {
     private static final RuntimeException UNABLE_TO_COMPARE_COMMITS_INVALID_FILES_FORMAT
             = new HttpException("Unable to compare commits: invalid files format", HttpStatus.SC_FAILED_DEPENDENCY);
 
-    private final OkHttpClient client;
     private final GithubApiClient apiClient;
-    private final GithubCredentials credentials;
     private final long sizeLimit;
     private final java.nio.charset.Charset charset;
 
     @SuppressWarnings("CdiInjectionPointsInspection")
-    public GithubService(OkHttpClient httpClient, GithubApiClient githubApiClient,
-                         GithubCredentials githubCredentials, long fileSizeLimit, Charset configuredCharset) {
-        client = httpClient;
+    public GithubService(GithubApiClient githubApiClient, long fileSizeLimit, Charset configuredCharset) {
         apiClient = githubApiClient;
-        credentials = githubCredentials;
         sizeLimit = fileSizeLimit;
         charset = configuredCharset.get();
     }

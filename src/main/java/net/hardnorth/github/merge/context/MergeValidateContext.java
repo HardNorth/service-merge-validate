@@ -4,7 +4,6 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import net.hardnorth.github.merge.config.PropertyNames;
 import net.hardnorth.github.merge.model.Charset;
-import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.*;
 import net.hardnorth.github.merge.service.impl.*;
 import okhttp3.OkHttpClient;
@@ -18,7 +17,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("CdiInjectionPointsInspection")
@@ -83,15 +81,6 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public GithubCredentials githubCredentials(SecretManager secretManager,
-                                               @ConfigProperty(name = PropertyNames.GITHUB_CLIENT_ID_SECRET) String idSecret,
-                                               @ConfigProperty(name = PropertyNames.GITHUB_CLIENT_TOKEN_SECRET) String tokenSecret) {
-        List<String> secrets = secretManager.getSecrets(idSecret, tokenSecret);
-        return new GithubCredentials(secrets.get(0), secrets.get(1));
-    }
-
-    @Produces
-    @ApplicationScoped
     public JWT applicationKey(SecretManager secretManager,
                               @ConfigProperty(name = PropertyNames.GITHUB_APP_ID) String applicationId,
                               @ConfigProperty(name = PropertyNames.GITHUB_RSA_KEY_SECRET) String keyName)
@@ -102,11 +91,10 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public Github githubService(OkHttpClient httpClient, GithubApiClient apiClient,
-                                GithubCredentials githubCredentials, Charset currentCharset,
+    public Github githubService(GithubApiClient apiClient, Charset currentCharset,
 
                                 @ConfigProperty(name = PropertyNames.GITHUB_FILE_SIZE_LIMIT) long sizeLimit) {
-        return new GithubService(httpClient, apiClient, githubCredentials, sizeLimit, currentCharset);
+        return new GithubService(apiClient, sizeLimit, currentCharset);
     }
 
     @Produces
@@ -132,7 +120,7 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public GithubWebhook githubWebhookService(MergeValidate mergeValidate) {
-        return new GithubWebhookService(mergeValidate);
+    public GithubWebhook githubWebhookService(Github github, MergeValidate mergeValidate, JWT jwt, Datastore datastore) {
+        return new GithubWebhookService(github, mergeValidate, jwt, datastore);
     }
 }
