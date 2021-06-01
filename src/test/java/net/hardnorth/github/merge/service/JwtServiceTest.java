@@ -1,7 +1,6 @@
 package net.hardnorth.github.merge.service;
 
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
 import net.hardnorth.github.merge.service.impl.JwtService;
 import net.hardnorth.github.merge.utils.IoUtils;
@@ -20,7 +19,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class JwtServiceTest {
 
