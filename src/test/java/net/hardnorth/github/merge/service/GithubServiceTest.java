@@ -45,36 +45,15 @@ public class GithubServiceTest {
     public static final String MERGE_FILE_NAME = ".merge-validate";
     public static final String CLIENT_ID = "test-client-id";
     public static final String CLIENT_SECRET = "test-client-secret";
-    public static final String GITHUB_APP_ID = "72458";
 
     private static final Gson GSON = new Gson();
-
-    private static Algorithm ALGORITHM;
 
     private final OkHttpClient httpClient = mock(OkHttpClient.class);
     private final GithubApiClient githubApiClient = mock(GithubApiClient.class);
 
     public final Github github =
-            new GithubService(GITHUB_APP_ID, httpClient, new JwtAlgorithm(ALGORITHM), githubApiClient,
+            new GithubService(httpClient, githubApiClient,
                     new GithubCredentials(CLIENT_ID, CLIENT_SECRET), 512000, new Charset(StandardCharsets.UTF_8));
-
-    @BeforeAll
-    public static void setup() throws IOException {
-        InputStream keyIs = GithubServiceTest.class.getClassLoader().getResourceAsStream("encryption/merge-validate-test-key.pem");
-        if(keyIs == null) {
-            throw new IllegalStateException("Unable to find test RSA key");
-        }
-        PEMParser pemParser = new PEMParser(new InputStreamReader(keyIs));
-        Object object = pemParser.readObject();
-        JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
-        KeyPair keyPair;
-        if (object instanceof PEMKeyPair) {
-            keyPair = converter.getKeyPair((PEMKeyPair) object);
-        } else {
-            throw new IllegalArgumentException("Invalid application key format");
-        }
-        ALGORITHM = Algorithm.RSA256((RSAPublicKey) keyPair.getPublic(), (RSAPrivateKey) keyPair.getPrivate());
-    }
 
     @SuppressWarnings({"unchecked"})
     private void mockContentCall(String path, JsonElement responseBody) throws IOException {
@@ -175,11 +154,5 @@ public class GithubServiceTest {
             assertThat(act.getType(), sameInstance(exp.getType()));
             assertThat(act.getName(), equalTo(exp.getName()));
         });
-    }
-
-    @Test
-    public void verify_authentication_token() {
-        String token = github.authenticateApplication();
-        assertThat(token, allOf(notNullValue(), startsWith("Bearer ")));
     }
 }

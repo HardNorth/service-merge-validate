@@ -6,8 +6,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public interface Github {
-    @Nonnull
-    String authenticateApplication();
 
     @Nonnull
     byte[] getFileContent(@Nullable String authHeader, @Nullable String user, @Nullable String repo,
