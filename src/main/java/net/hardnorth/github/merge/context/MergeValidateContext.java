@@ -1,14 +1,19 @@
 package net.hardnorth.github.merge.context;
 
+import com.auth0.jwt.algorithms.Algorithm;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import net.hardnorth.github.merge.config.PropertyNames;
 import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.model.GithubCredentials;
+import net.hardnorth.github.merge.model.JwtAlgorithm;
 import net.hardnorth.github.merge.service.*;
 import net.hardnorth.github.merge.service.impl.*;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -16,7 +21,13 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -93,29 +104,35 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public Github githubService(OkHttpClient httpClient, GithubAuthClient authClient, GithubApiClient apiClient,
+    public JwtAlgorithm applicationKey(SecretManager secretManager,
+                                       @ConfigProperty(name = PropertyNames.GITHUB_RSA_KEY_SECRET) String keyName)
+            throws IOException {
+        byte[] rsaKeyBytes = secretManager.getRawSecret(keyName);
+        PEMParser pemParser = new PEMParser(new InputStreamReader(new ByteArrayInputStream(rsaKeyBytes)));
+        Object object = pemParser.readObject();
+        JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+        KeyPair keyPair;
+        if (object instanceof PEMKeyPair) {
+            keyPair = converter.getKeyPair((PEMKeyPair) object);
+        } else {
+            throw new IllegalArgumentException("Invalid application key format");
+        }
+        return new JwtAlgorithm(Algorithm.RSA256((RSAPublicKey) keyPair.getPublic(), (RSAPrivateKey) keyPair.getPrivate()));
+    }
+
+    @Produces
+    @ApplicationScoped
+    public Github githubService(OkHttpClient httpClient, JwtAlgorithm key, GithubApiClient apiClient,
                                 GithubCredentials githubCredentials, Charset currentCharset,
+                                @ConfigProperty(name = PropertyNames.GITHUB_APP_ID) String applicationId,
                                 @ConfigProperty(name = PropertyNames.GITHUB_FILE_SIZE_LIMIT) long sizeLimit) {
-        return new GithubService(httpClient, authClient, apiClient, githubCredentials, sizeLimit, currentCharset);
+        return new GithubService(applicationId, httpClient, key, apiClient, githubCredentials, sizeLimit, currentCharset);
     }
 
     @Produces
     @ApplicationScoped
     public Datastore datastoreService(@ConfigProperty(name = PropertyNames.APPLICATION_NAME) String applicationName) {
         return DatastoreOptions.newBuilder().setNamespace(applicationName).build().getService();
-    }
-
-    @Produces
-    @ApplicationScoped
-    public GithubOAuthService authorizationService(Datastore datastore, Github githubApi, EncryptionService encryptionService,
-                                                   @ConfigProperty(name = PropertyNames.APPLICATION_URL) String serviceUrl,
-                                                   @ConfigProperty(name = PropertyNames.GITHUB_AUTHORIZE_URL) String githubOAuthUrl,
-                                                   GithubCredentials credentials, Charset charset) {
-        GithubOAuthService service = new GithubOAuthService(datastore, githubApi, encryptionService, serviceUrl, credentials, charset);
-        if (isNotBlank(githubOAuthUrl)) {
-            service.setGithubOAuthUrl(githubOAuthUrl);
-        }
-        return service;
     }
 
     @Produces

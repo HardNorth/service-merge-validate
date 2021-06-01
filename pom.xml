@@ -9,13 +9,13 @@
     <properties>
         <maven.compiler.target>11</maven.compiler.target>
         <maven.compiler.source>11</maven.compiler.source>
-        <surefire-plugin.version>2.22.1</surefire-plugin.version>
-        <quarkus.platform.version>2.0.0.Alpha3</quarkus.platform.version>
+        <surefire-plugin.version>2.22.2</surefire-plugin.version>
+        <quarkus.platform.version>2.0.0.CR2</quarkus.platform.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.parameters>true</maven.compiler.parameters>
-        <quarkus-plugin.version>2.0.0.Alpha3</quarkus-plugin.version>
+        <quarkus-plugin.version>2.0.0.CR1</quarkus-plugin.version>
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <retrofit.version>2.9.0</retrofit.version>
@@ -31,8 +31,8 @@
             </dependency>
             <dependency>
                 <groupId>com.google.cloud</groupId>
-                <artifactId>google-cloud-datastore-bom</artifactId>
-                <version>1.105.6</version>
+                <artifactId>google-cloud-bom</artifactId>
+                <version>0.154.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -62,8 +62,17 @@
             <artifactId>quarkus-resteasy</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>3.16.0</version>
+        </dependency>
+        <dependency>
             <groupId>io.quarkus.security</groupId>
             <artifactId>quarkus-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -82,7 +91,6 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-secretmanager</artifactId>
-            <version>1.2.8</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

@@ -53,7 +53,7 @@ public class LoggingFilter implements ContainerRequestFilter {
         LOGGER.infof("[%s] Headers: \n %s", requestId, headers);
         request.bodyHandler(b -> {
             if (b.length() > 0) {
-                LOGGER.infof("[%s] Body: \n %s", requestId, b.toString(charset.getValue()));
+                LOGGER.infof("[%s] Body: \n %s", requestId, b.toString(charset.get()));
             }
         });
     }

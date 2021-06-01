@@ -1,26 +1,28 @@
 package net.hardnorth.github.merge.service.impl;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTCreator;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.hardnorth.github.merge.exception.ConnectionException;
 import net.hardnorth.github.merge.exception.HttpException;
-import net.hardnorth.github.merge.model.Charset;
-import net.hardnorth.github.merge.model.CommitDifference;
-import net.hardnorth.github.merge.model.FileChange;
-import net.hardnorth.github.merge.model.GithubCredentials;
+import net.hardnorth.github.merge.model.*;
 import net.hardnorth.github.merge.service.Github;
 import net.hardnorth.github.merge.service.GithubApiClient;
-import net.hardnorth.github.merge.service.GithubAuthClient;
 import okhttp3.OkHttpClient;
 import org.apache.http.HttpStatus;
 import retrofit2.Response;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.time.ZoneId;
 import java.util.Base64;
+import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -69,44 +71,34 @@ public class GithubService implements Github {
     private static final RuntimeException UNABLE_TO_COMPARE_COMMITS_INVALID_FILES_FORMAT
             = new HttpException("Unable to compare commits: invalid files format", HttpStatus.SC_FAILED_DEPENDENCY);
 
+    private final String id;
     private final OkHttpClient client;
-    private final GithubAuthClient authClient;
+    private final Algorithm algorithm;
     private final GithubApiClient apiClient;
     private final GithubCredentials credentials;
     private final long sizeLimit;
     private final java.nio.charset.Charset charset;
 
     @SuppressWarnings("CdiInjectionPointsInspection")
-    public GithubService(OkHttpClient httpClient, GithubAuthClient githubAuthClient, GithubApiClient githubApiClient,
+    public GithubService(String applicationId, OkHttpClient httpClient, JwtAlgorithm jwtAlgorithm, GithubApiClient githubApiClient,
                          GithubCredentials githubCredentials, long fileSizeLimit, Charset configuredCharset) {
+        id = applicationId;
         client = httpClient;
-        authClient = githubAuthClient;
+        algorithm = jwtAlgorithm.get();
         apiClient = githubApiClient;
         credentials = githubCredentials;
         sizeLimit = fileSizeLimit;
-        charset = configuredCharset.getValue();
+        charset = configuredCharset.get();
     }
 
     @Nonnull
     @Override
-    public String loginApplication(String code, String state) {
-        Response<JsonObject> rs = executeServiceCall(authClient.loginApplication(credentials.getId(),
-                credentials.getToken(), code, state, null), charset);
-        if (rs.body() == null) {
-            throw new ConnectionException("Unable to connect to Github API");
-        }
-        JsonObject body = rs.body();
-        if (!body.has(ACCESS_TOKEN) || !body.has(ACCESS_TOKEN_TYPE)) {
-            throw INVALID_API_RESPONSE;
-        }
-        JsonElement tokenObject = body.get(ACCESS_TOKEN);
-        JsonElement tokenTypeObject = body.get(ACCESS_TOKEN_TYPE);
-        if (tokenObject.isJsonNull() || tokenTypeObject.isJsonNull()) {
-            throw INVALID_API_RESPONSE;
-        }
-        String githubToken = tokenObject.getAsString();
-        String tokenType = tokenTypeObject.getAsString();
-        return tokenType + " " + githubToken;
+    public String authenticateApplication() {
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(ZoneId.of("UTC")));
+        calendar.add(Calendar.MINUTE, -1);
+        JWTCreator.Builder jwtBuilder = JWT.create().withIssuer(id).withIssuedAt(calendar.getTime());
+        calendar.add(Calendar.MINUTE, 10);
+        return "Bearer " + jwtBuilder.withExpiresAt(calendar.getTime()).sign(algorithm);
     }
 
     @Nonnull

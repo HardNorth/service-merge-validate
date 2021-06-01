@@ -28,7 +28,7 @@ public class MergeValidateService implements MergeValidate {
                                 @Nonnull Charset currentCharset) {
         client = githubClient;
         mergeFile = mergeFileName;
-        charset = currentCharset.getValue();
+        charset = currentCharset.get();
         strictRules = Arrays.asList("!" + mergeFile, "!.github/workflows/**");
     }
 

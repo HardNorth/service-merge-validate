@@ -27,7 +27,7 @@ public class GoogleSecretManager implements SecretManager {
     public GoogleSecretManager(String projectId, Charset serviceCharset)
     {
         projectName = projectId;
-        charset = serviceCharset.getValue();
+        charset = serviceCharset.get();
     }
 
     @Override

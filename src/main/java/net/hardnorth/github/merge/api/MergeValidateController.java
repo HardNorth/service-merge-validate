@@ -29,7 +29,7 @@ public class MergeValidateController {
     @SuppressWarnings("CdiInjectionPointsInspection")
     public MergeValidateController(@ConfigProperty(name = PropertyNames.GITHUB_WEBHOOK_TOKEN_SECRET) String webhookSecretKey,
                                    SecretManager secretManager, Charset serviceCharset, GithubWebhook webhookService) {
-        charset = serviceCharset.getValue();
+        charset = serviceCharset.get();
         webhookSecret = secretManager.getRawSecret(webhookSecretKey);
         webhook = webhookService;
     }

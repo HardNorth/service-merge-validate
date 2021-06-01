@@ -1,20 +1,22 @@
 package net.hardnorth.github.merge.service;
 
+import com.auth0.jwt.algorithms.Algorithm;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.hardnorth.github.merge.exception.HttpException;
-import net.hardnorth.github.merge.model.Charset;
-import net.hardnorth.github.merge.model.CommitDifference;
-import net.hardnorth.github.merge.model.FileChange;
-import net.hardnorth.github.merge.model.GithubCredentials;
+import net.hardnorth.github.merge.model.*;
 import net.hardnorth.github.merge.service.impl.GithubService;
 import net.hardnorth.github.merge.utils.IoUtils;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import org.apache.http.HttpStatus;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -22,7 +24,12 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.IntStream;
@@ -38,17 +45,36 @@ public class GithubServiceTest {
     public static final String MERGE_FILE_NAME = ".merge-validate";
     public static final String CLIENT_ID = "test-client-id";
     public static final String CLIENT_SECRET = "test-client-secret";
+    public static final String GITHUB_APP_ID = "72458";
 
     private static final Gson GSON = new Gson();
 
+    private static Algorithm ALGORITHM;
+
     private final OkHttpClient httpClient = mock(OkHttpClient.class);
-    private final GithubAuthClient githubAuthClient = mock(GithubAuthClient.class);
     private final GithubApiClient githubApiClient = mock(GithubApiClient.class);
 
     public final Github github =
-            new GithubService(httpClient, githubAuthClient, githubApiClient,
+            new GithubService(GITHUB_APP_ID, httpClient, new JwtAlgorithm(ALGORITHM), githubApiClient,
                     new GithubCredentials(CLIENT_ID, CLIENT_SECRET), 512000, new Charset(StandardCharsets.UTF_8));
 
+    @BeforeAll
+    public static void setup() throws IOException {
+        InputStream keyIs = GithubServiceTest.class.getClassLoader().getResourceAsStream("encryption/merge-validate-test-key.pem");
+        if(keyIs == null) {
+            throw new IllegalStateException("Unable to find test RSA key");
+        }
+        PEMParser pemParser = new PEMParser(new InputStreamReader(keyIs));
+        Object object = pemParser.readObject();
+        JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+        KeyPair keyPair;
+        if (object instanceof PEMKeyPair) {
+            keyPair = converter.getKeyPair((PEMKeyPair) object);
+        } else {
+            throw new IllegalArgumentException("Invalid application key format");
+        }
+        ALGORITHM = Algorithm.RSA256((RSAPublicKey) keyPair.getPublic(), (RSAPrivateKey) keyPair.getPrivate());
+    }
 
     @SuppressWarnings({"unchecked"})
     private void mockContentCall(String path, JsonElement responseBody) throws IOException {
@@ -149,5 +175,11 @@ public class GithubServiceTest {
             assertThat(act.getType(), sameInstance(exp.getType()));
             assertThat(act.getName(), equalTo(exp.getName()));
         });
+    }
+
+    @Test
+    public void verify_authentication_token() {
+        String token = github.authenticateApplication();
+        assertThat(token, allOf(notNullValue(), startsWith("Bearer ")));
     }
 }
