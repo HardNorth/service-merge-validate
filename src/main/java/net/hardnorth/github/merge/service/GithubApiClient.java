@@ -8,6 +8,11 @@ import retrofit2.http.*;
 
 public interface GithubApiClient {
 
+    @POST("app/installations/{installation_id}/access_tokens")
+    @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
+    Call<JsonObject> authenticateInstallation(@Header("Authorization") String auth,
+                                              @Path("installation_id") long installationId);
+
     @GET("repos/{user}/{repo}/contents/{path}")
     @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
     Call<JsonElement> getContent(@Header("Authorization") String auth, @Path("user") String user,
@@ -23,8 +28,8 @@ public interface GithubApiClient {
     Call<JsonObject> compareCommits(@Header("Authorization") String auth, @Path("user") String user,
                                     @Path("repo") String repo, @Path("base") String base, @Path("head") String head);
 
-    @POST("/repos/{user}/{repo}/merges")
+    @POST("/repos/{owner}/{repo}/merges")
     @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
-    Call<JsonObject> mergeBranches(@Header("Authorization") String auth, @Path("user") String user,
+    Call<JsonObject> mergeBranches(@Header("Authorization") String auth, @Path("owner") String owner,
                                    @Path("repo") String repo, @Body JsonObject body);
 }

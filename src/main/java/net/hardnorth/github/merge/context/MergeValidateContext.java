@@ -42,19 +42,6 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public GithubAuthClient githubAuthClient(@ConfigProperty(name = PropertyNames.GITHUB_BASE_URL) String githubUrl,
-                                             OkHttpClient client) {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(githubUrl)
-                .client(client)
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        return retrofit.create(GithubAuthClient.class);
-    }
-
-    @Produces
-    @ApplicationScoped
     public GithubApiClient githubApiClient(@ConfigProperty(name = PropertyNames.GITHUB_API_URL) String githubUrl,
                                            OkHttpClient client) {
         Retrofit retrofit = new Retrofit.Builder()

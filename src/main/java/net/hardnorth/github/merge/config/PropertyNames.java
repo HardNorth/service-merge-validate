@@ -13,7 +13,6 @@ public class PropertyNames {
 
     // Github
     public static final String GITHUB_LOG = "net.hardnorth.github.http.log";
-    public static final String GITHUB_BASE_URL = "net.hardnorth.github.root.url";
     public static final String GITHUB_API_URL = "net.hardnorth.github.api.url";
     public static final String GITHUB_APP_ID = "net.hardnorth.github.app.id";
     public static final String GITHUB_RSA_KEY_SECRET = "net.hardnorth.github.rsa.key.secret";

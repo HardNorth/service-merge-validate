@@ -22,13 +22,11 @@ import static org.mockito.Mockito.when;
 @QuarkusTest
 public class MergeValidateControllerTest {
 
-    public static final String GITHUB_BASE_URL = "http://localhost/";
     public static final String GITHUB_WEBHOOK_TOKEN_KEY = "test_webhook_token";
     public static final String GITHUB_WEBHOOK_TOKEN = "0795d41d-6a54-42d7-80a0-07c98e5a9688";
 
     static {
         System.setProperty(PropertyNames.APPLICATION_URL, "https://merge.hardnorth.net");
-        System.setProperty(PropertyNames.GITHUB_BASE_URL, GITHUB_BASE_URL);
         System.setProperty(PropertyNames.GITHUB_WEBHOOK_TOKEN_SECRET, GITHUB_WEBHOOK_TOKEN_KEY);
     }
 
