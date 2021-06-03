@@ -2,7 +2,6 @@ package net.hardnorth.github.merge.api;
 
 import io.quarkus.security.AuthenticationFailedException;
 import net.hardnorth.github.merge.config.PropertyNames;
-import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.model.hook.InstallationRequest;
 import net.hardnorth.github.merge.model.hook.PushRequest;
 import net.hardnorth.github.merge.service.GithubWebhook;
@@ -22,14 +21,12 @@ import java.nio.charset.StandardCharsets;
 public class MergeValidateController {
     private static final Logger LOGGER = Logger.getLogger(MergeValidateController.class);
 
-    private final java.nio.charset.Charset charset;
     private final byte[] webhookSecret;
     private final GithubWebhook webhook;
 
     @SuppressWarnings("CdiInjectionPointsInspection")
     public MergeValidateController(@ConfigProperty(name = PropertyNames.GITHUB_WEBHOOK_TOKEN_SECRET) String webhookSecretKey,
-                                   SecretManager secretManager, Charset serviceCharset, GithubWebhook webhookService) {
-        charset = serviceCharset.get();
+                                   SecretManager secretManager, GithubWebhook webhookService) {
         webhookSecret = secretManager.getRawSecret(webhookSecretKey);
         webhook = webhookService;
     }
