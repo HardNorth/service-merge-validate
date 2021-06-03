@@ -16,6 +16,8 @@ import javax.ws.rs.ext.Provider;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static java.util.Optional.ofNullable;
+
 @Provider
 public class LoggingFilter implements ContainerRequestFilter {
 
@@ -43,7 +45,7 @@ public class LoggingFilter implements ContainerRequestFilter {
         final String requestId = IdUtils.generateId();
         final String method = context.getMethod();
         final String path = info.getPath();
-        final String address = request.remoteAddress().toString();
+        final String address = ofNullable(request.remoteAddress()).map(Object::toString).orElse("unknown");
 
         LOGGER.infof("[%s] Request %s %s from IP %s", requestId, method, path, address);
         String headers = StreamSupport
