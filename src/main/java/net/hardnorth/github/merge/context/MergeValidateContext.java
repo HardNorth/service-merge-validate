@@ -107,7 +107,8 @@ public class MergeValidateContext {
 
     @Produces
     @ApplicationScoped
-    public GithubWebhook githubWebhookService(Github github, MergeValidate mergeValidate, JWT jwt, Datastore datastore) {
-        return new GithubWebhookService(github, mergeValidate, jwt, datastore);
+    public GithubWebhook githubWebhookService(@ConfigProperty(name = PropertyNames.APPLICATION_NAME) String appName,
+                                              Github github, MergeValidate mergeValidate, JWT jwt, Datastore datastore) {
+        return new GithubWebhookService(appName, github, mergeValidate, jwt, datastore);
     }
 }

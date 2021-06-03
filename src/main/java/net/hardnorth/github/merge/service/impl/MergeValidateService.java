@@ -14,7 +14,6 @@ import java.util.List;
 
 public class MergeValidateService implements MergeValidate {
 
-
     private static final RuntimeException NOT_FAST_FORWARD = new IllegalArgumentException("Unable to merge branches: not fast forward");
     private static final RuntimeException ILLEGAL_CHANGES = new IllegalArgumentException("Unable to merge branches: illegal changes");
 

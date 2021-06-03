@@ -18,12 +18,15 @@ import java.util.Date;
 public class GithubWebhookService implements GithubWebhook {
     private static final Logger LOGGER = Logger.getLogger(GithubWebhookService.class);
 
+    private static final String ZEROES = "0000000000000000000000000000000000000000";
+    private static final String BRANCH_NAME_SEPARATOR = "-";
     private static final String TOKENS_KIND = "tokens";
     private static final String TOKEN = "token";
     private static final String INSTALLATION_ID = "installation_id";
     private static final String EXPIRE_DATE = "expire_date";
     private static final String BEARER = "Bearer ";
 
+    private final String appName;
     private final Github github;
     private final MergeValidate merge;
     private final JWT jwt;
@@ -31,8 +34,9 @@ public class GithubWebhookService implements GithubWebhook {
     private final KeyFactory tokenKeyFactory;
 
     @SuppressWarnings("CdiInjectionPointsInspection")
-    public GithubWebhookService(Github githubService, MergeValidate mergeValidate, JWT jwtService,
-                                Datastore datastoreService) {
+    public GithubWebhookService(String applicationName, Github githubService, MergeValidate mergeValidate,
+                                JWT jwtService, Datastore datastoreService) {
+        appName = applicationName;
         github = githubService;
         merge = mergeValidate;
         jwt = jwtService;
@@ -71,9 +75,17 @@ public class GithubWebhookService implements GithubWebhook {
 
     @Override
     public void processPush(PushRequest pushRequest) {
-        if (!pushRequest.isCreated()) {
+        if (!pushRequest.isCreated() || ZEROES.equals(pushRequest.getBefore())) {
             return; // Work only with new branches
         }
+
+        String workBranch = pushRequest.getRef().substring(pushRequest.getRef().lastIndexOf('/'));
+        if(!workBranch.startsWith(appName + BRANCH_NAME_SEPARATOR)) {
+            return; // Work only with branches which match pattern: application_name-target_branch
+        }
+
+        String targetBranch = workBranch.substring(appName.length() + BRANCH_NAME_SEPARATOR.length());
+
         Long installationId = pushRequest.getInstallation().getId();
         if (installationId == null) {
             throw new IllegalArgumentException("Invalid request: no installation ID");
@@ -104,7 +116,8 @@ public class GithubWebhookService implements GithubWebhook {
         } else {
             token = tokenResult.next().getString(TOKEN);
         }
-        // TODO: finish
-        // merge.merge(BEARER + token, );
+
+        merge.merge(BEARER + token, pushRequest.getRepository().getOwner().getName(),
+                pushRequest.getRepository().getName(), workBranch, targetBranch);
     }
 }
