@@ -53,7 +53,7 @@ public class MergeValidateController {
         if (!WebServiceCommon.validateSha256Signature(rawSignature, webhookSecret, body.getBytes(StandardCharsets.UTF_8))) {
             throw new AuthenticationFailedException("Invalid signature");
         }
-        LOGGER.infof("Got a '%s' webhook request:\n%s", event, body); // TODO: finish
+        LOGGER.infof("Got a '%s' webhook request:\n%s", event, body);
 
         switch (event) {
             case "installation":

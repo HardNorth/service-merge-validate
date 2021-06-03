@@ -75,11 +75,11 @@ public class GithubWebhookService implements GithubWebhook {
 
     @Override
     public void processPush(PushRequest pushRequest) {
-        if (!pushRequest.isCreated() || ZEROES.equals(pushRequest.getBefore())) {
+        if (!pushRequest.isCreated() || !ZEROES.equals(pushRequest.getBefore())) {
             return; // Work only with new branches
         }
 
-        String workBranch = pushRequest.getRef().substring(pushRequest.getRef().lastIndexOf('/'));
+        String workBranch = pushRequest.getRef().substring(pushRequest.getRef().lastIndexOf('/') + 1);
         if(!workBranch.startsWith(appName + BRANCH_NAME_SEPARATOR)) {
             return; // Work only with branches which match pattern: application_name-target_branch
         }
@@ -109,6 +109,7 @@ public class GithubWebhookService implements GithubWebhook {
             Entity entity = Entity
                     .newBuilder(datastore.allocateId(tokenKeyFactory.newKey()))
                     .set(TOKEN, tokenResponse.getKey())
+                    .set(INSTALLATION_ID, installationId)
                     .set(EXPIRE_DATE, Timestamp.of(tokenResponse.getValue()))
                     .build();
             datastore.put(entity);
