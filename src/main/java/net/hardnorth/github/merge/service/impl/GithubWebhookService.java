@@ -96,7 +96,7 @@ public class GithubWebhookService implements GithubWebhook {
                 .setFilter(
                         StructuredQuery.CompositeFilter.and(
                                 StructuredQuery.PropertyFilter.eq(INSTALLATION_ID, installationId),
-                                StructuredQuery.PropertyFilter.lt(EXPIRE_DATE, Timestamp.now())
+                                StructuredQuery.PropertyFilter.gt(EXPIRE_DATE, Timestamp.now())
                         ))
                 .setLimit(1)
                 .build();
