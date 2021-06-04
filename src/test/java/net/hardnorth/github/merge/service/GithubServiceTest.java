@@ -7,11 +7,9 @@ import net.hardnorth.github.merge.exception.HttpException;
 import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.model.CommitDifference;
 import net.hardnorth.github.merge.model.FileChange;
-import net.hardnorth.github.merge.model.GithubCredentials;
 import net.hardnorth.github.merge.service.impl.GithubService;
 import net.hardnorth.github.merge.utils.IoUtils;
 import okhttp3.Headers;
-import okhttp3.OkHttpClient;
 import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -36,19 +34,13 @@ import static org.mockito.Mockito.when;
 
 public class GithubServiceTest {
     public static final String MERGE_FILE_NAME = ".merge-validate";
-    public static final String CLIENT_ID = "test-client-id";
-    public static final String CLIENT_SECRET = "test-client-secret";
 
     private static final Gson GSON = new Gson();
 
-    private final OkHttpClient httpClient = mock(OkHttpClient.class);
-    private final GithubAuthClient githubAuthClient = mock(GithubAuthClient.class);
     private final GithubApiClient githubApiClient = mock(GithubApiClient.class);
 
     public final Github github =
-            new GithubService(httpClient, githubAuthClient, githubApiClient,
-                    new GithubCredentials(CLIENT_ID, CLIENT_SECRET), 512000, new Charset(StandardCharsets.UTF_8));
-
+            new GithubService(githubApiClient, 512000, new Charset(StandardCharsets.UTF_8));
 
     @SuppressWarnings({"unchecked"})
     private void mockContentCall(String path, JsonElement responseBody) throws IOException {

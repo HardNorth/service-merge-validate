@@ -19,8 +19,8 @@ The service needs the following permissions:
 
 ### Deploy
 ```none
-gcloud beta functions deploy function-1 \ 
-  --entry-point=io.quarkus.gcp.functions.http.QuarkusHttpFunction \ 
+gcloud functions deploy service-merge-validate \
+  --entry-point=io.quarkus.gcp.functions.http.QuarkusHttpFunction \
   --runtime=java11 --trigger-http --source=target/deployment --allow-unauthenticated \
   --service-account={your_service_account}
 ```

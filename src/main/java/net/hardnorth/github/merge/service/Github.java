@@ -1,13 +1,16 @@
 package net.hardnorth.github.merge.service;
 
 import net.hardnorth.github.merge.model.CommitDifference;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Date;
 
 public interface Github {
+
     @Nonnull
-    String loginApplication(@Nullable String code, @Nullable String state);
+    Pair<String, Date> authenticateInstallation(@Nullable String authHeader, long installationId);
 
     @Nonnull
     byte[] getFileContent(@Nullable String authHeader, @Nullable String user, @Nullable String repo,
@@ -21,6 +24,6 @@ public interface Github {
     CommitDifference listChanges(@Nullable String authHeader, @Nullable String user, @Nullable String repo,
                                  @Nullable String source, @Nullable String dest);
 
-    void merge(@Nullable String authHeader, @Nullable String user, @Nullable String repo, @Nullable String source,
+    void merge(@Nullable String authHeader, @Nullable String owner, @Nullable String repo, @Nullable String source,
                @Nullable String dest, @Nullable String message);
 }

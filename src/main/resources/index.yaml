@@ -1,7 +1,5 @@
 indexes:
-  - kind: github-oauth
-    ancestor: no
+  - kind: tokens
     properties:
-      - name: authUuid
-      - name: expires
-        direction: desc
+      - name: installation_id
+      - name: expire_date

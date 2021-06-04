@@ -7,7 +7,7 @@ public class Charset {
         value = charset;
     }
 
-    public java.nio.charset.Charset getValue() {
+    public java.nio.charset.Charset get() {
         return value;
     }
 }

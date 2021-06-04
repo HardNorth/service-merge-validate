@@ -3,12 +3,14 @@ package net.hardnorth.github.merge.service;
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.api.gax.rpc.StatusCode;
 import com.google.cloud.secretmanager.v1.*;
+import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.service.impl.GoogleSecretManager;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,7 +28,7 @@ public class GoogleSecretManagerTest {
 
     private final SecretManagerServiceClient secretClient = mock(SecretManagerServiceClient.class);
     private final Secret secret = mock(Secret.class);
-    private final SecretManager secretManager = new GoogleSecretManager(PROJECT_NAME_STR);
+    private final SecretManager secretManager = new GoogleSecretManager(PROJECT_NAME_STR, new Charset(StandardCharsets.UTF_8));
     private final String secretKey = UUID.randomUUID().toString();
 
     @Test

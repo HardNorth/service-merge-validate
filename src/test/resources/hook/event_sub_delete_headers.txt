@@ -1,0 +1,31 @@
+### POST ('127.0.0.1', 50987) - HTTP/1.1 - /
+
+### Headers ###
+host: smee.io
+Accept-Encoding: gzip, deflate
+user-agent: GitHub-Hookshot/ee1783f
+content-type: application/json
+connection: close
+accept: */*
+x-github-delivery: e067a810-bf84-11eb-8111-f341de7e2993
+x-github-event: installation
+x-github-hook-id: 233286994
+x-github-hook-installation-target-id: 72458
+x-github-hook-installation-target-type: integration
+x-hub-signature: sha1=8fa3ac7629f219d5ba6da276266a8efaea154991
+x-hub-signature-256: sha256=8b744ee02587f019e1031e9807b04376d65a179f60d814d2ee31569a560a2303
+x-request-id: 8908fe15-9b09-458d-8c88-d29d50711fbd
+x-forwarded-for: 140.82.115.250
+x-forwarded-proto: https
+x-forwarded-port: 443
+via: 1.1 vegur
+connect-time: 0
+x-request-start: 1622186299044
+total-route-time: 0
+content-length: 2536
+timestamp: 1622186299052
+
+
+
+### POST content ###
+b'{"action":"new_permissions_accepted","installation":{"id":17227225,"account":{"login":"HardNorth","id":4364466,"node_id":"MDQ6VXNlcjQzNjQ0NjY=","avatar_url":"https://avatars.githubusercontent.com/u/4364466?v=4","gravatar_id":"","url":"https://api.github.com/users/HardNorth","html_url":"https://github.com/HardNorth","followers_url":"https://api.github.com/users/HardNorth/followers","following_url":"https://api.github.com/users/HardNorth/following{/other_user}","gists_url":"https://api.github.com/users/HardNorth/gists{/gist_id}","starred_url":"https://api.github.com/users/HardNorth/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/HardNorth/subscriptions","organizations_url":"https://api.github.com/users/HardNorth/orgs","repos_url":"https://api.github.com/users/HardNorth/repos","events_url":"https://api.github.com/users/HardNorth/events{/privacy}","received_events_url":"https://api.github.com/users/HardNorth/received_events","type":"User","site_admin":false},"repository_selection":"all","access_tokens_url":"https://api.github.com/app/installations/17227225/access_tokens","repositories_url":"https://api.github.com/installation/repositories","html_url":"https://github.com/settings/installations/17227225","app_id":72458,"app_slug":"merge-validate-dev","target_id":4364466,"target_type":"User","permissions":{"contents":"write","metadata":"read"},"events":[],"created_at":"2021-05-28T09:50:44.000+03:00","updated_at":"2021-05-28T10:18:18.000+03:00","single_file_name":null,"has_multiple_single_files":false,"single_file_paths":[],"suspended_by":null,"suspended_at":null},"sender":{"login":"HardNorth","id":4364466,"node_id":"MDQ6VXNlcjQzNjQ0NjY=","avatar_url":"https://avatars.githubusercontent.com/u/4364466?v=4","gravatar_id":"","url":"https://api.github.com/users/HardNorth","html_url":"https://github.com/HardNorth","followers_url":"https://api.github.com/users/HardNorth/followers","following_url":"https://api.github.com/users/HardNorth/following{/other_user}","gists_url":"https://api.github.com/users/HardNorth/gists{/gist_id}","starred_url":"https://api.github.com/users/HardNorth/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/HardNorth/subscriptions","organizations_url":"https://api.github.com/users/HardNorth/orgs","repos_url":"https://api.github.com/users/HardNorth/repos","events_url":"https://api.github.com/users/HardNorth/events{/privacy}","received_events_url":"https://api.github.com/users/HardNorth/received_events","type":"User","site_admin":false}}'
