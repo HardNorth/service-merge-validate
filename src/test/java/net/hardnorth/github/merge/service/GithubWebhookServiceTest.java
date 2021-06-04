@@ -60,7 +60,7 @@ public class GithubWebhookServiceTest {
         long installationId = new Random().nextLong();
         request.getInstallation().setId(installationId);
 
-        // Perform second call and ensure token was saved to cache
+        // Perform first call and ensure token was saved to cache
         webhook.processPush(request);
 
         EntityQuery query = Query
