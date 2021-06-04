@@ -63,11 +63,12 @@ public class GithubWebhookServiceTest {
         // Perform second call and ensure token was saved to cache
         webhook.processPush(request);
 
-        QueryResults<Entity> tokenResult = datastore.run(Query
+        EntityQuery query = Query
                 .newEntityQueryBuilder()
                 .setKind(TOKENS_KIND)
                 .setFilter(StructuredQuery.PropertyFilter.eq(INSTALLATION_ID, installationId))
-                .build());
+                .build();
+        QueryResults<Entity> tokenResult = datastore.run(query);
 
         List<Entity> allTokens = StreamSupport.stream(
                 Spliterators.spliteratorUnknownSize(tokenResult, Spliterator.SIZED),
@@ -80,11 +81,7 @@ public class GithubWebhookServiceTest {
         // Perform second call and ensure token was taken for cache
         webhook.processPush(request);
 
-        tokenResult = datastore.run(Query
-                .newEntityQueryBuilder()
-                .setKind(TOKENS_KIND)
-                .setFilter(StructuredQuery.PropertyFilter.eq(INSTALLATION_ID, installationId))
-                .build());
+        tokenResult = datastore.run(query);
         allTokens = StreamSupport.stream(
                 Spliterators.spliteratorUnknownSize(tokenResult, Spliterator.SIZED),
                 false
