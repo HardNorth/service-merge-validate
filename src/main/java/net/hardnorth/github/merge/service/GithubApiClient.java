@@ -33,10 +33,20 @@ public interface GithubApiClient {
     Call<JsonObject> mergeBranches(@Header("Authorization") String auth, @Path("owner") String owner,
                                    @Path("repo") String repo, @Body JsonObject body);
 
+    // Pull requests
+
     @POST("/repos/{owner}/{repo}/pulls")
     @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
     Call<JsonObject> createPullRequest(@Header("Authorization") String auth, @Path("owner") String owner,
                                    @Path("repo") String repo, @Body JsonObject body);
 
+    @GET("/repos/{owner}/{repo}/pulls/{pull_number}")
+    @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
+    Call<JsonObject> getPullRequest(@Header("Authorization") String auth, @Path("owner") String owner,
+                                       @Path("repo") String repo, @Path("pull_number") int pullNumber);
 
+    @GET("/repos/{owner}/{repo}/pulls/{pull_number}/merge")
+    @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
+    Call<JsonObject> checkIfPullRequestMerged(@Header("Authorization") String auth, @Path("owner") String owner,
+                                    @Path("repo") String repo, @Path("pull_number") int pullNumber);
 }
