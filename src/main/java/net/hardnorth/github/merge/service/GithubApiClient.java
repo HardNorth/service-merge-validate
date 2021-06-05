@@ -32,4 +32,11 @@ public interface GithubApiClient {
     @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
     Call<JsonObject> mergeBranches(@Header("Authorization") String auth, @Path("owner") String owner,
                                    @Path("repo") String repo, @Body JsonObject body);
+
+    @POST("/repos/{owner}/{repo}/pulls")
+    @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
+    Call<JsonObject> createPullRequest(@Header("Authorization") String auth, @Path("owner") String owner,
+                                   @Path("repo") String repo, @Body JsonObject body);
+
+
 }

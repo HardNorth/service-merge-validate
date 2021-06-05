@@ -49,6 +49,8 @@ public class GithubService implements Github {
     private static final String STATUS_FIELD = "status";
     private static final String BASE_FIELD = "base";
     private static final String HEAD_FIELD = "head";
+    private static final String TITLE_FIELD = "title";
+    private static final String BODY_FIELD = "body";
     private static final String COMMIT_MESSAGE_FIELD = "commit_message";
 
     public static final RuntimeException INVALID_API_RESPONSE = new ConnectionException("Invalid response from Github API");
@@ -243,5 +245,17 @@ public class GithubService implements Github {
         ofNullable(source).ifPresent(s -> request.add(HEAD_FIELD, new JsonPrimitive(s)));
         ofNullable(message).ifPresent(m -> request.add(COMMIT_MESSAGE_FIELD, new JsonPrimitive(m)));
         executeServiceCall(apiClient.mergeBranches(authHeader, owner, repo, request), charset);
+    }
+
+    @Override
+    public void createPullRequest(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
+                                  @Nullable String source, @Nullable String dest, @Nullable String title,
+                                  @Nullable String body) {
+        JsonObject request = new JsonObject();
+        ofNullable(dest).ifPresent(d -> request.add(BASE_FIELD, new JsonPrimitive(d)));
+        ofNullable(source).ifPresent(s -> request.add(HEAD_FIELD, new JsonPrimitive(s)));
+        ofNullable(title).ifPresent(m -> request.add(TITLE_FIELD, new JsonPrimitive(m)));
+        ofNullable(body).ifPresent(m -> request.add(BODY_FIELD, new JsonPrimitive(m)));
+        executeServiceCall(apiClient.createPullRequest(authHeader, owner, repo, request), charset);
     }
 }
