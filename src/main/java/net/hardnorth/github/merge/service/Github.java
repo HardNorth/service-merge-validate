@@ -30,4 +30,11 @@ public interface Github {
     void createPullRequest(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
                            @Nullable String source, @Nullable String dest, @Nullable String title,
                            @Nullable String body);
+
+    void createReview(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
+                      int pullNumber, @Nullable String event, @Nullable String body);
+
+    void mergePullRequest(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
+                          int pullNumber, @Nullable String commitTitle, @Nullable String commitMessage,
+                          @Nullable String mergeMethod);
 }

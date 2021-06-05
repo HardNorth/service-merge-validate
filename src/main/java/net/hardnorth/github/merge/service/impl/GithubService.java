@@ -51,7 +51,10 @@ public class GithubService implements Github {
     private static final String HEAD_FIELD = "head";
     private static final String TITLE_FIELD = "title";
     private static final String BODY_FIELD = "body";
+    private static final String EVENT_FIELD = "event";
+    private static final String COMMIT_TITLE_FIELD = "commit_title";
     private static final String COMMIT_MESSAGE_FIELD = "commit_message";
+    private static final String MERGE_METHOD_FIELD = "merge_method";
 
     public static final RuntimeException INVALID_API_RESPONSE = new ConnectionException("Invalid response from Github API");
     private static final RuntimeException UNABLE_TO_GET_CONFIGURATION_EXCEPTION_INVALID_RESPONSE
@@ -257,5 +260,25 @@ public class GithubService implements Github {
         ofNullable(title).ifPresent(m -> request.add(TITLE_FIELD, new JsonPrimitive(m)));
         ofNullable(body).ifPresent(m -> request.add(BODY_FIELD, new JsonPrimitive(m)));
         executeServiceCall(apiClient.createPullRequest(authHeader, owner, repo, request), charset);
+    }
+
+    @Override
+    public void createReview(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
+                             int pullNumber, @Nullable String event, @Nullable String body) {
+        JsonObject request = new JsonObject();
+        ofNullable(event).ifPresent(m -> request.add(EVENT_FIELD, new JsonPrimitive(m)));
+        ofNullable(body).ifPresent(m -> request.add(BODY_FIELD, new JsonPrimitive(m)));
+        executeServiceCall(apiClient.createReview(authHeader, owner, repo, pullNumber, request), charset);
+    }
+
+    @Override
+    public void mergePullRequest(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
+                                 int pullNumber, @Nullable String commitTitle, @Nullable String commitMessage,
+                                 @Nullable String mergeMethod) {
+        JsonObject request = new JsonObject();
+        ofNullable(commitTitle).ifPresent(m -> request.add(COMMIT_TITLE_FIELD, new JsonPrimitive(m)));
+        ofNullable(commitMessage).ifPresent(m -> request.add(COMMIT_MESSAGE_FIELD, new JsonPrimitive(m)));
+        ofNullable(mergeMethod).ifPresent(m -> request.add(MERGE_METHOD_FIELD, new JsonPrimitive(m)));
+        executeServiceCall(apiClient.mergePullRequest(authHeader, owner, repo, pullNumber, request), charset);
     }
 }

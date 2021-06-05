@@ -38,15 +38,27 @@ public interface GithubApiClient {
     @POST("/repos/{owner}/{repo}/pulls")
     @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
     Call<JsonObject> createPullRequest(@Header("Authorization") String auth, @Path("owner") String owner,
-                                   @Path("repo") String repo, @Body JsonObject body);
+                                       @Path("repo") String repo, @Body JsonObject body);
 
     @GET("/repos/{owner}/{repo}/pulls/{pull_number}")
     @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
     Call<JsonObject> getPullRequest(@Header("Authorization") String auth, @Path("owner") String owner,
-                                       @Path("repo") String repo, @Path("pull_number") int pullNumber);
+                                    @Path("repo") String repo, @Path("pull_number") int pullNumber);
 
     @GET("/repos/{owner}/{repo}/pulls/{pull_number}/merge")
     @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
     Call<JsonObject> checkIfPullRequestMerged(@Header("Authorization") String auth, @Path("owner") String owner,
-                                    @Path("repo") String repo, @Path("pull_number") int pullNumber);
+                                              @Path("repo") String repo, @Path("pull_number") int pullNumber);
+
+    @POST("/repos/{owner}/{repo}/pulls/{pull_number}/reviews")
+    @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
+    Call<JsonObject> createReview(@Header("Authorization") String auth, @Path("owner") String owner,
+                                  @Path("repo") String repo, @Path("pull_number") int pullNumber,
+                                  @Body JsonObject body);
+
+    @PUT("/repos/{owner}/{repo}/pulls/{pull_number}/merge")
+    @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
+    Call<JsonObject> mergePullRequest(@Header("Authorization") String auth, @Path("owner") String owner,
+                                      @Path("repo") String repo, @Path("pull_number") int pullNumber,
+                                      @Body JsonObject body);
 }
