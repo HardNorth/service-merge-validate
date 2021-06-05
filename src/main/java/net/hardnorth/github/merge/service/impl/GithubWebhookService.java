@@ -118,7 +118,12 @@ public class GithubWebhookService implements GithubWebhook {
             token = tokenResult.next().getString(TOKEN);
         }
 
-        merge.merge(BEARER + token, pushRequest.getRepository().getOwner().getName(),
-                pushRequest.getRepository().getName(), workBranch, targetBranch);
+        String owner = pushRequest.getRepository().getOwner().getName();
+        String repository = pushRequest.getRepository().getName();
+
+        merge.validate(BEARER + token, owner, repository, workBranch, targetBranch);
+
+        github.createPullRequest(BEARER + token, owner, repository, workBranch, targetBranch,
+                "Merge " + workBranch + " to " + targetBranch, null);
     }
 }

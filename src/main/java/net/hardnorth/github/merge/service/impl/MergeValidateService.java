@@ -14,8 +14,10 @@ import java.util.List;
 
 public class MergeValidateService implements MergeValidate {
 
-    private static final RuntimeException NOT_FAST_FORWARD = new IllegalArgumentException("Unable to merge branches: not fast forward");
-    private static final RuntimeException ILLEGAL_CHANGES = new IllegalArgumentException("Unable to merge branches: illegal changes");
+    private static final RuntimeException NOT_FAST_FORWARD =
+            new IllegalArgumentException("Unable to merge branches: not fast forward");
+    private static final RuntimeException ILLEGAL_CHANGES =
+            new IllegalArgumentException("Unable to merge branches: illegal changes");
 
     private final Github client;
     private final String mergeFile;
@@ -32,7 +34,7 @@ public class MergeValidateService implements MergeValidate {
     }
 
     @Override
-    public void merge(String authHeader, String user, String repo, String from, String to) {
+    public void validate(String authHeader, String user, String repo, String from, String to) {
         String mergeFileContent = new String(client.getFileContent(authHeader, user, repo, to, mergeFile), charset);
         ValidationPattern pattern = ValidationPattern.parse(mergeFileContent);
         strictRules.forEach(pattern::addRule);
@@ -54,7 +56,5 @@ public class MergeValidateService implements MergeValidate {
         if (!allConform) {
             throw ILLEGAL_CHANGES;
         }
-
-        client.merge(authHeader, user, repo, from, to, String.format("Merge branch %s into %s", from, to));
     }
 }

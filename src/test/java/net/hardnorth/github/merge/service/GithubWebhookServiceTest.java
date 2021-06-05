@@ -8,6 +8,7 @@ import net.hardnorth.github.merge.utils.WebServiceCommon;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -48,8 +49,11 @@ public class GithubWebhookServiceTest {
                 .getResourceAsStream("hook/new_branch.json"), StandardCharsets.UTF_8);
         webhook.processPush(WebServiceCommon.deserializeJson(request, PushRequest.class));
 
-        verify(mergeValidate).merge(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
+        verify(mergeValidate).validate(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
                 eq("merge-validate-develop"), eq("develop"));
+        verify(github).createPullRequest(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
+                eq("merge-validate-develop"), eq("develop"),
+                eq("Merge merge-validate-develop to develop"), ArgumentMatchers.nullable(String.class));
     }
 
     @Test
@@ -93,7 +97,10 @@ public class GithubWebhookServiceTest {
         verify(github).authenticateInstallation(anyString(), eq(installationId));
 
         // Verify two merges performed
-        verify(mergeValidate, times(2)).merge(endsWith(token), eq("HardNorth"),
+        verify(mergeValidate, times(2)).validate(endsWith(token), eq("HardNorth"),
                 eq("agent-java-testNG"), eq("merge-validate-develop"), eq("develop"));
+        verify(github, times(2)).createPullRequest(anyString(), eq("HardNorth"),
+                eq("agent-java-testNG"), eq("merge-validate-develop"), eq("develop"),
+                eq("Merge merge-validate-develop to develop"), ArgumentMatchers.nullable(String.class));
     }
 }

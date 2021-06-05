@@ -51,7 +51,7 @@ public class MergeValidateServiceTest {
                 .thenReturn(IoUtils.readInputStreamToBytes(getClass().getClassLoader().getResourceAsStream(configFile)));
         when(github.listChanges(eq(AUTHORIZATION), eq(USER), eq(REPO), eq(SOURCE_BRANCH), eq(DEST_BRANCH)))
                 .thenReturn(diff);
-        service.merge(AUTHORIZATION, USER, REPO, SOURCE_BRANCH, DEST_BRANCH);
+        service.validate(AUTHORIZATION, USER, REPO, SOURCE_BRANCH, DEST_BRANCH);
     }
 
     public static final List<FileChange> CHANGES = Arrays.asList(new FileChange(FileChange.Type.CHANGED, ".github/workflows/release.yml"),
@@ -82,7 +82,7 @@ public class MergeValidateServiceTest {
                 .thenReturn(response);
 
         IllegalArgumentException result = Assertions.assertThrows(IllegalArgumentException.class,
-                () -> service.merge(AUTHORIZATION, USER, REPO, SOURCE_BRANCH, DEST_BRANCH));
+                () -> service.validate(AUTHORIZATION, USER, REPO, SOURCE_BRANCH, DEST_BRANCH));
         assertThat(result.getMessage(), Matchers.endsWith(expectedMessage));
     }
 
@@ -106,7 +106,7 @@ public class MergeValidateServiceTest {
                 .thenReturn(difference);
 
         IllegalArgumentException result = Assertions.assertThrows(IllegalArgumentException.class,
-                () -> service.merge(AUTHORIZATION, USER, REPO, SOURCE_BRANCH, DEST_BRANCH));
+                () -> service.validate(AUTHORIZATION, USER, REPO, SOURCE_BRANCH, DEST_BRANCH));
         assertThat(result.getMessage(), Matchers.endsWith("illegal changes"));
     }
 }
