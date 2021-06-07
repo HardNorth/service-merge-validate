@@ -37,5 +37,5 @@ jobs:
           export DATASTORE_HOST=http://localhost:9091
           export DATASTORE_PROJECT_ID=test
           
-          gcloud beta emulators datastore start --host-port ${DATASTORE_EMULATOR_HOST} --no-store-on-disk &
-          ./mvnw -B --no-transfer-progress test
+          gcloud beta emulators datastore start --consistency=1.0 --host-port ${DATASTORE_EMULATOR_HOST} \
+          --no-store-on-disk & ./mvnw -B --no-transfer-progress test
