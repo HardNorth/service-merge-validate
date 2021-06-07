@@ -40,7 +40,11 @@ public class GithubWebhookServiceTest {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.HOUR, 1);
         when(jwt.get()).thenReturn(UUID.randomUUID().toString());
-        when(github.authenticateInstallation(anyString(), anyLong())).thenReturn(Pair.of(UUID.randomUUID().toString(), cal.getTime()));
+        when(github.authenticateInstallation(anyString(), anyLong()))
+                .thenReturn(Pair.of(UUID.randomUUID().toString(), cal.getTime()));
+        when(github
+                .createPullRequest(anyString(), anyString(),anyString(),anyString(),anyString(), anyString(), nullable(String.class)))
+                .thenAnswer(a -> new Random().nextInt(1000000));
     }
 
     @Test

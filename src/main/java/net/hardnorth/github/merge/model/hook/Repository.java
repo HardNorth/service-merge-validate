@@ -9,7 +9,7 @@ public class Repository {
     @SerializedName("full_name")
     private String fullName;
 
-    private Owner owner;
+    private User owner;
 
     public String getName() {
         return name;
@@ -27,11 +27,11 @@ public class Repository {
         this.fullName = fullName;
     }
 
-    public Owner getOwner() {
+    public User getOwner() {
         return owner;
     }
 
-    public void setOwner(Owner owner) {
+    public void setOwner(User owner) {
         this.owner = owner;
     }
 }

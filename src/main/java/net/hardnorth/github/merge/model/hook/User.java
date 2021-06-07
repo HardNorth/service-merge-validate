@@ -1,6 +1,6 @@
 package net.hardnorth.github.merge.model.hook;
 
-public class Owner {
+public class User {
     private String name;
 
     public String getName() {

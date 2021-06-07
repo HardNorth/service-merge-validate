@@ -2,7 +2,9 @@ package net.hardnorth.github.merge.api;
 
 import io.quarkus.security.AuthenticationFailedException;
 import net.hardnorth.github.merge.config.PropertyNames;
+import net.hardnorth.github.merge.model.hook.CheckRunRequest;
 import net.hardnorth.github.merge.model.hook.InstallationRequest;
+import net.hardnorth.github.merge.model.hook.PullRequest;
 import net.hardnorth.github.merge.model.hook.PushRequest;
 import net.hardnorth.github.merge.service.GithubWebhook;
 import net.hardnorth.github.merge.service.SecretManager;
@@ -61,6 +63,14 @@ public class MergeValidateController {
                 break;
             case "push":
                 webhook.processPush(WebServiceCommon.deserializeJson(body, PushRequest.class));
+                break;
+            case "pull_request":
+                webhook.processPull(WebServiceCommon.deserializeJson(body, PullRequest.class));
+                break;
+            case "check_run":
+                webhook.processCheckRun(WebServiceCommon.deserializeJson(body, CheckRunRequest.class));
+                break;
+            case "check_suite":
                 break;
             default:
                 throw new IllegalArgumentException("Unknown webhook event: " + event);

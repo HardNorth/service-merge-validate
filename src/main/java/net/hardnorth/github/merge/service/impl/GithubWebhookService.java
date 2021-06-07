@@ -2,10 +2,7 @@ package net.hardnorth.github.merge.service.impl;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.datastore.*;
-import net.hardnorth.github.merge.model.hook.Account;
-import net.hardnorth.github.merge.model.hook.Installation;
-import net.hardnorth.github.merge.model.hook.InstallationRequest;
-import net.hardnorth.github.merge.model.hook.PushRequest;
+import net.hardnorth.github.merge.model.hook.*;
 import net.hardnorth.github.merge.service.Github;
 import net.hardnorth.github.merge.service.GithubWebhook;
 import net.hardnorth.github.merge.service.JWT;
@@ -21,9 +18,16 @@ public class GithubWebhookService implements GithubWebhook {
     private static final String ZEROES = "0000000000000000000000000000000000000000";
     private static final String BRANCH_NAME_SEPARATOR = "-";
     private static final String TOKENS_KIND = "tokens";
+    private static final String PULL_REQUESTS_KIND = "pull_requests";
     private static final String TOKEN = "token";
     private static final String INSTALLATION_ID = "installation_id";
     private static final String EXPIRE_DATE = "expire_date";
+    private static final String PULL_NUMBER = "pull_number";
+    private static final String TIMESTAMP = "timestamp";
+    private static final String OWNER = "owner";
+    private static final String REPOSITORY = "repo";
+    private static final String SOURCE_BRANCH = "source_branch";
+    private static final String TARGET_BRANCH = "target_branch";
     private static final String BEARER = "Bearer ";
 
     private final String appName;
@@ -32,6 +36,7 @@ public class GithubWebhookService implements GithubWebhook {
     private final JWT jwt;
     private final Datastore datastore;
     private final KeyFactory tokenKeyFactory;
+    private final KeyFactory pullsKeyFactory;
 
     @SuppressWarnings("CdiInjectionPointsInspection")
     public GithubWebhookService(String applicationName, Github githubService, MergeValidate mergeValidate,
@@ -42,6 +47,7 @@ public class GithubWebhookService implements GithubWebhook {
         jwt = jwtService;
         datastore = datastoreService;
         tokenKeyFactory = datastore.newKeyFactory().setKind(TOKENS_KIND);
+        pullsKeyFactory = datastore.newKeyFactory().setKind(PULL_REQUESTS_KIND);
     }
 
     private void createInstallation(InstallationRequest installationRequest) {
@@ -123,7 +129,31 @@ public class GithubWebhookService implements GithubWebhook {
 
         merge.validate(BEARER + token, owner, repository, workBranch, targetBranch);
 
-        github.createPullRequest(BEARER + token, owner, repository, workBranch, targetBranch,
+        int pullNumber = github.createPullRequest(BEARER + token, owner, repository, workBranch, targetBranch,
                 "Merge " + workBranch + " to " + targetBranch, null);
+
+        Entity entity = Entity
+                .newBuilder(datastore.allocateId(pullsKeyFactory.newKey()))
+                .set(PULL_NUMBER, pullNumber)
+                .set(TIMESTAMP, Timestamp.now())
+                .set(OWNER, owner)
+                .set(REPOSITORY, repository)
+                .set(SOURCE_BRANCH, workBranch)
+                .set(TARGET_BRANCH, targetBranch)
+                .build();
+        datastore.put(entity);
+    }
+
+    @Override
+    public void processPull(PullRequest pullRequest) {
+        LOGGER.infof("Pull request action '%s' on pull request '%d' in repository '%s' of user '%s'",
+                pullRequest.getAction(), pullRequest.getNumber(), pullRequest.getRepository().getName(),
+                pullRequest.getRepository().getOwner().getName());
+    }
+
+    @Override
+    public void processCheckRun(CheckRunRequest checkRunRequest) {
+        LOGGER.infof("Check run Action '%s' in repository '%s' of user '%s'", checkRunRequest.getAction(),
+                checkRunRequest.getRepository().getName(), checkRunRequest.getRepository().getOwner().getName());
     }
 }

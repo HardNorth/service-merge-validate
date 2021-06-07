@@ -27,7 +27,7 @@ public interface Github {
     void merge(@Nullable String authHeader, @Nullable String owner, @Nullable String repo, @Nullable String source,
                @Nullable String dest, @Nullable String message);
 
-    void createPullRequest(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
+    int createPullRequest(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
                            @Nullable String source, @Nullable String dest, @Nullable String title,
                            @Nullable String body);
 

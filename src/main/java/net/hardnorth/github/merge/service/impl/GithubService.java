@@ -55,6 +55,8 @@ public class GithubService implements Github {
     private static final String COMMIT_TITLE_FIELD = "commit_title";
     private static final String COMMIT_MESSAGE_FIELD = "commit_message";
     private static final String MERGE_METHOD_FIELD = "merge_method";
+    private static final String NUMBER_FIELD = "number";
+
 
     public static final RuntimeException INVALID_API_RESPONSE = new ConnectionException("Invalid response from Github API");
     private static final RuntimeException UNABLE_TO_GET_CONFIGURATION_EXCEPTION_INVALID_RESPONSE
@@ -251,15 +253,18 @@ public class GithubService implements Github {
     }
 
     @Override
-    public void createPullRequest(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
-                                  @Nullable String source, @Nullable String dest, @Nullable String title,
-                                  @Nullable String body) {
+    public int createPullRequest(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
+                                 @Nullable String source, @Nullable String dest, @Nullable String title,
+                                 @Nullable String body) {
         JsonObject request = new JsonObject();
         ofNullable(dest).ifPresent(d -> request.add(BASE_FIELD, new JsonPrimitive(d)));
         ofNullable(source).ifPresent(s -> request.add(HEAD_FIELD, new JsonPrimitive(s)));
         ofNullable(title).ifPresent(m -> request.add(TITLE_FIELD, new JsonPrimitive(m)));
         ofNullable(body).ifPresent(m -> request.add(BODY_FIELD, new JsonPrimitive(m)));
-        executeServiceCall(apiClient.createPullRequest(authHeader, owner, repo, request), charset);
+        Response<JsonObject> result =
+                executeServiceCall(apiClient.createPullRequest(authHeader, owner, repo, request), charset);
+        return ofNullable(result.body()).map(b -> b.getAsJsonPrimitive(NUMBER_FIELD)).map(JsonPrimitive::getAsInt)
+                .orElseThrow(() -> INVALID_API_RESPONSE);
     }
 
     @Override
