@@ -55,6 +55,10 @@ public class WebServiceCommon {
         return GSON.fromJson(json, type);
     }
 
+    public static <T> T deserializeJson(JsonElement json, Class<T> type) {
+        return GSON.fromJson(json, type);
+    }
+
     public static String asString(JsonElement json) {
         return GSON.toJson(json);
     }

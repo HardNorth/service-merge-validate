@@ -6,11 +6,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.hardnorth.github.merge.exception.ConnectionException;
 import net.hardnorth.github.merge.exception.HttpException;
+import net.hardnorth.github.merge.model.repo.BranchProtection;
 import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.model.CommitDifference;
 import net.hardnorth.github.merge.model.FileChange;
 import net.hardnorth.github.merge.service.Github;
 import net.hardnorth.github.merge.service.GithubApiClient;
+import net.hardnorth.github.merge.utils.WebServiceCommon;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpStatus;
 import org.jboss.logging.Logger;
@@ -56,6 +58,7 @@ public class GithubService implements Github {
     private static final String COMMIT_MESSAGE_FIELD = "commit_message";
     private static final String MERGE_METHOD_FIELD = "merge_method";
     private static final String NUMBER_FIELD = "number";
+    private static final String CONTEXTS_FIELD = "contexts";
 
 
     public static final RuntimeException INVALID_API_RESPONSE = new ConnectionException("Invalid response from Github API");
@@ -285,5 +288,15 @@ public class GithubService implements Github {
         ofNullable(commitMessage).ifPresent(m -> request.add(COMMIT_MESSAGE_FIELD, new JsonPrimitive(m)));
         ofNullable(mergeMethod).ifPresent(m -> request.add(MERGE_METHOD_FIELD, new JsonPrimitive(m)));
         executeServiceCall(apiClient.mergePullRequest(authHeader, owner, repo, pullNumber, request), charset);
+    }
+
+    @Override
+    public BranchProtection getBranchProtection(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
+                                                @Nullable String branch) {
+        Response<JsonObject> response =
+                executeServiceCall(apiClient.getBranchProtection(authHeader, owner, repo, branch), charset);
+        return ofNullable(response.body())
+                .map(b -> WebServiceCommon.deserializeJson(b, BranchProtection.class))
+                .orElseThrow(() -> INVALID_API_RESPONSE);
     }
 }

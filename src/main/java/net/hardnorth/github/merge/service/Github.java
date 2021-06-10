@@ -1,5 +1,6 @@
 package net.hardnorth.github.merge.service;
 
+import net.hardnorth.github.merge.model.repo.BranchProtection;
 import net.hardnorth.github.merge.model.CommitDifference;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -37,4 +38,7 @@ public interface Github {
     void mergePullRequest(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
                           int pullNumber, @Nullable String commitTitle, @Nullable String commitMessage,
                           @Nullable String mergeMethod);
+
+    BranchProtection getBranchProtection(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
+                                         @Nullable String branch);
 }
