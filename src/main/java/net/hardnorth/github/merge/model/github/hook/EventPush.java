@@ -1,6 +1,6 @@
-package net.hardnorth.github.merge.model.hook;
+package net.hardnorth.github.merge.model.github.hook;
 
-public class PushRequest {
+public class EventPush {
 
     private String ref;
 

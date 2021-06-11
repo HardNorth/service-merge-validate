@@ -13,6 +13,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -56,6 +57,10 @@ public class WebServiceCommon {
     }
 
     public static <T> T deserializeJson(JsonElement json, Class<T> type) {
+        return GSON.fromJson(json, type);
+    }
+
+    public static <T> T deserializeJson(JsonElement json, Type type) {
         return GSON.fromJson(json, type);
     }
 

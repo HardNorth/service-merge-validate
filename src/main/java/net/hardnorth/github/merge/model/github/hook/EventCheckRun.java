@@ -1,8 +1,8 @@
-package net.hardnorth.github.merge.model.hook;
+package net.hardnorth.github.merge.model.github.hook;
 
 import com.google.gson.annotations.SerializedName;
 
-public class CheckRunRequest {
+public class EventCheckRun {
     private String action;
 
     @SerializedName("check_run")

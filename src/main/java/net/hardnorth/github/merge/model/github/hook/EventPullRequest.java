@@ -1,6 +1,6 @@
-package net.hardnorth.github.merge.model.hook;
+package net.hardnorth.github.merge.model.github.hook;
 
-public class PullRequest {
+public class EventPullRequest {
     private String action;
 
     private String number;

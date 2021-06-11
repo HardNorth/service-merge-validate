@@ -2,10 +2,10 @@ package net.hardnorth.github.merge.api;
 
 import io.quarkus.security.AuthenticationFailedException;
 import net.hardnorth.github.merge.config.PropertyNames;
-import net.hardnorth.github.merge.model.hook.CheckRunRequest;
-import net.hardnorth.github.merge.model.hook.InstallationRequest;
-import net.hardnorth.github.merge.model.hook.PullRequest;
-import net.hardnorth.github.merge.model.hook.PushRequest;
+import net.hardnorth.github.merge.model.github.hook.EventCheckRun;
+import net.hardnorth.github.merge.model.github.hook.EventInstallation;
+import net.hardnorth.github.merge.model.github.hook.EventPullRequest;
+import net.hardnorth.github.merge.model.github.hook.EventPush;
 import net.hardnorth.github.merge.service.GithubWebhook;
 import net.hardnorth.github.merge.service.SecretManager;
 import net.hardnorth.github.merge.utils.WebServiceCommon;
@@ -59,16 +59,16 @@ public class MergeValidateController {
 
         switch (event) {
             case "installation":
-                webhook.processInstallation(WebServiceCommon.deserializeJson(body, InstallationRequest.class));
+                webhook.processInstallation(WebServiceCommon.deserializeJson(body, EventInstallation.class));
                 break;
             case "push":
-                webhook.processPush(WebServiceCommon.deserializeJson(body, PushRequest.class));
+                webhook.processPush(WebServiceCommon.deserializeJson(body, EventPush.class));
                 break;
             case "pull_request":
-                webhook.processPull(WebServiceCommon.deserializeJson(body, PullRequest.class));
+                webhook.processPull(WebServiceCommon.deserializeJson(body, EventPullRequest.class));
                 break;
             case "check_run":
-                webhook.processCheckRun(WebServiceCommon.deserializeJson(body, CheckRunRequest.class));
+                webhook.processCheckRun(WebServiceCommon.deserializeJson(body, EventCheckRun.class));
                 break;
             case "check_suite":
                 break;

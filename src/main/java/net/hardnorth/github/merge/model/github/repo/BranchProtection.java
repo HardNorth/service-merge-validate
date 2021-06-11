@@ -1,4 +1,4 @@
-package net.hardnorth.github.merge.model.repo;
+package net.hardnorth.github.merge.model.github.repo;
 
 import com.google.gson.annotations.SerializedName;
 

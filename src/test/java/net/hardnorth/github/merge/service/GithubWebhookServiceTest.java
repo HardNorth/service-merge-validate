@@ -1,7 +1,7 @@
 package net.hardnorth.github.merge.service;
 
 import com.google.cloud.datastore.*;
-import net.hardnorth.github.merge.model.hook.PushRequest;
+import net.hardnorth.github.merge.model.github.hook.EventPush;
 import net.hardnorth.github.merge.service.impl.GithubWebhookService;
 import net.hardnorth.github.merge.utils.IoUtils;
 import net.hardnorth.github.merge.utils.WebServiceCommon;
@@ -51,7 +51,7 @@ public class GithubWebhookServiceTest {
     public void test_merge_path() {
         String request = IoUtils.readInputStreamToString(getClass().getClassLoader()
                 .getResourceAsStream("hook/new_branch.json"), StandardCharsets.UTF_8);
-        webhook.processPush(WebServiceCommon.deserializeJson(request, PushRequest.class));
+        webhook.processPush(WebServiceCommon.deserializeJson(request, EventPush.class));
 
         verify(mergeValidate).validate(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
                 eq("merge-validate-develop"), eq("develop"));
@@ -64,7 +64,7 @@ public class GithubWebhookServiceTest {
     public void test_datastore_cache() {
         String requestStr = IoUtils.readInputStreamToString(getClass().getClassLoader()
                 .getResourceAsStream("hook/new_branch.json"), StandardCharsets.UTF_8);
-        PushRequest request = WebServiceCommon.deserializeJson(requestStr, PushRequest.class);
+        EventPush request = WebServiceCommon.deserializeJson(requestStr, EventPush.class);
         long installationId = new Random().nextLong();
         request.getInstallation().setId(installationId);
 

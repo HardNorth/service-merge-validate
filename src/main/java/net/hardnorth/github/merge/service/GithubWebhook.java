@@ -1,16 +1,16 @@
 package net.hardnorth.github.merge.service;
 
-import net.hardnorth.github.merge.model.hook.CheckRunRequest;
-import net.hardnorth.github.merge.model.hook.InstallationRequest;
-import net.hardnorth.github.merge.model.hook.PullRequest;
-import net.hardnorth.github.merge.model.hook.PushRequest;
+import net.hardnorth.github.merge.model.github.hook.EventCheckRun;
+import net.hardnorth.github.merge.model.github.hook.EventInstallation;
+import net.hardnorth.github.merge.model.github.hook.EventPullRequest;
+import net.hardnorth.github.merge.model.github.hook.EventPush;
 
 public interface GithubWebhook {
-    void processInstallation(InstallationRequest installationRequest);
+    void processInstallation(EventInstallation installationRequest);
 
-    void processPush(PushRequest pushRequest);
+    void processPush(EventPush pushRequest);
 
-    void processPull(PullRequest pullRequest);
+    void processPull(EventPullRequest pullRequest);
 
-    void processCheckRun(CheckRunRequest checkRunRequest);
+    void processCheckRun(EventCheckRun checkRunRequest);
 }

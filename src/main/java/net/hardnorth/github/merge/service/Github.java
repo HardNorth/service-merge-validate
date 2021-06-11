@@ -1,12 +1,14 @@
 package net.hardnorth.github.merge.service;
 
-import net.hardnorth.github.merge.model.repo.BranchProtection;
 import net.hardnorth.github.merge.model.CommitDifference;
+import net.hardnorth.github.merge.model.github.repo.BranchProtection;
+import net.hardnorth.github.merge.model.github.repo.PullRequest;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Date;
+import java.util.List;
 
 public interface Github {
 
@@ -29,8 +31,8 @@ public interface Github {
                @Nullable String dest, @Nullable String message);
 
     int createPullRequest(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
-                           @Nullable String source, @Nullable String dest, @Nullable String title,
-                           @Nullable String body);
+                          @Nullable String source, @Nullable String dest, @Nullable String title,
+                          @Nullable String body);
 
     void createReview(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
                       int pullNumber, @Nullable String event, @Nullable String body);
@@ -41,4 +43,7 @@ public interface Github {
 
     BranchProtection getBranchProtection(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
                                          @Nullable String branch);
+
+    List<PullRequest> getOpenedPullRequests(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
+                                            @Nullable String branch);
 }

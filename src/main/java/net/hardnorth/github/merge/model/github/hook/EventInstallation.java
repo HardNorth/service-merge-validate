@@ -1,8 +1,8 @@
-package net.hardnorth.github.merge.model.hook;
+package net.hardnorth.github.merge.model.github.hook;
 
 import java.util.List;
 
-public class InstallationRequest {
+public class EventInstallation {
 
     private String action;
 

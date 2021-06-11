@@ -1,5 +1,6 @@
 package net.hardnorth.github.merge.service;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.apache.http.HttpHeaders;
@@ -39,6 +40,14 @@ public interface GithubApiClient {
                                    @Path("repo") String repo, @Body JsonObject body);
 
     // Pull requests
+
+    @GET("repos/{owner}/{repo}/pulls")
+    @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")
+    Call<JsonArray> getPullRequests(@Header("Authorization") String auth, @Path("owner") String owner,
+                                    @Path("repo") String repo, @Query("state") String state,
+                                    @Query("head") String head, @Query("base") String base, @Query("sort") String sort,
+                                    @Query("direction") String direction, @Query("per_page") Integer perPage,
+                                    @Query("page") Integer page);
 
     @POST("repos/{owner}/{repo}/pulls")
     @Headers(HttpHeaders.ACCEPT + ": application/vnd.github.v3+json")

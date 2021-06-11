@@ -4,12 +4,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.google.gson.reflect.TypeToken;
 import net.hardnorth.github.merge.exception.ConnectionException;
 import net.hardnorth.github.merge.exception.HttpException;
-import net.hardnorth.github.merge.model.repo.BranchProtection;
 import net.hardnorth.github.merge.model.Charset;
 import net.hardnorth.github.merge.model.CommitDifference;
 import net.hardnorth.github.merge.model.FileChange;
+import net.hardnorth.github.merge.model.github.repo.BranchProtection;
+import net.hardnorth.github.merge.model.github.repo.PullRequest;
 import net.hardnorth.github.merge.service.Github;
 import net.hardnorth.github.merge.service.GithubApiClient;
 import net.hardnorth.github.merge.utils.WebServiceCommon;
@@ -297,6 +299,18 @@ public class GithubService implements Github {
                 executeServiceCall(apiClient.getBranchProtection(authHeader, owner, repo, branch), charset);
         return ofNullable(response.body())
                 .map(b -> WebServiceCommon.deserializeJson(b, BranchProtection.class))
+                .orElseThrow(() -> INVALID_API_RESPONSE);
+    }
+
+    @Override
+    public List<PullRequest> getOpenedPullRequests(@Nullable String authHeader, @Nullable String owner,
+                                                   @Nullable String repo, @Nullable String branch) {
+        Response<JsonArray> response =
+                executeServiceCall(apiClient.getPullRequests(authHeader, owner, repo, "open", null, branch,
+                        null, null, null, null), charset);
+        return ofNullable(response.body())
+                .map(b -> WebServiceCommon.<List<PullRequest>>deserializeJson(b, new TypeToken<List<PullRequest>>() {
+                }.getType()))
                 .orElseThrow(() -> INVALID_API_RESPONSE);
     }
 }
