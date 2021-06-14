@@ -2,6 +2,7 @@ package net.hardnorth.github.merge.service;
 
 import com.google.cloud.datastore.*;
 import net.hardnorth.github.merge.model.github.hook.EventPush;
+import net.hardnorth.github.merge.model.github.repo.BranchProtection;
 import net.hardnorth.github.merge.service.impl.GithubWebhookService;
 import net.hardnorth.github.merge.utils.IoUtils;
 import net.hardnorth.github.merge.utils.WebServiceCommon;
@@ -45,6 +46,8 @@ public class GithubWebhookServiceTest {
         when(github
                 .createPullRequest(anyString(), anyString(),anyString(),anyString(),anyString(), anyString(), nullable(String.class)))
                 .thenAnswer(a -> new Random().nextInt(1000000));
+        BranchProtection bp = new BranchProtection();
+        when(github.getBranchProtection(anyString(), anyString(), anyString(), anyString())).thenReturn(bp);
     }
 
     @Test
@@ -55,9 +58,9 @@ public class GithubWebhookServiceTest {
 
         verify(mergeValidate).validate(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
                 eq("merge-validate-develop"), eq("develop"));
-        verify(github).createPullRequest(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
+        verify(github).merge(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
                 eq("merge-validate-develop"), eq("develop"),
-                eq("Merge merge-validate-develop to develop"), ArgumentMatchers.nullable(String.class));
+                eq("Merge merge-validate-develop to develop"));
     }
 
     @Test
@@ -103,8 +106,8 @@ public class GithubWebhookServiceTest {
         // Verify two merges performed
         verify(mergeValidate, times(2)).validate(endsWith(token), eq("HardNorth"),
                 eq("agent-java-testNG"), eq("merge-validate-develop"), eq("develop"));
-        verify(github, times(2)).createPullRequest(anyString(), eq("HardNorth"),
+        verify(github, times(2)).merge(anyString(), eq("HardNorth"),
                 eq("agent-java-testNG"), eq("merge-validate-develop"), eq("develop"),
-                eq("Merge merge-validate-develop to develop"), ArgumentMatchers.nullable(String.class));
+                eq("Merge merge-validate-develop to develop"));
     }
 }
