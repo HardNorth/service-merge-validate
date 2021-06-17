@@ -1,10 +1,13 @@
 package net.hardnorth.github.merge.service;
 
 import com.google.cloud.datastore.*;
+import com.google.gson.JsonObject;
+import net.hardnorth.github.merge.exception.RestServiceException;
 import net.hardnorth.github.merge.model.github.hook.EventPush;
 import net.hardnorth.github.merge.model.github.repo.BranchProtection;
 import net.hardnorth.github.merge.service.impl.GithubWebhookService;
 import net.hardnorth.github.merge.utils.IoUtils;
+import net.hardnorth.github.merge.utils.WebClientCommon;
 import net.hardnorth.github.merge.utils.WebServiceCommon;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,8 +49,6 @@ public class GithubWebhookServiceTest {
         when(github
                 .createPullRequest(anyString(), anyString(),anyString(),anyString(),anyString(), anyString(), nullable(String.class)))
                 .thenAnswer(a -> new Random().nextInt(1000000));
-        BranchProtection bp = new BranchProtection();
-        when(github.getBranchProtection(anyString(), anyString(), anyString(), anyString())).thenReturn(bp);
     }
 
     @Test
@@ -61,6 +62,35 @@ public class GithubWebhookServiceTest {
         verify(github).merge(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
                 eq("merge-validate-develop"), eq("develop"),
                 eq("Merge merge-validate-develop to develop"));
+    }
+
+    @Test
+    public void test_merge_error_review_protection() {
+        String error = IoUtils.readInputStreamToString(getClass().getClassLoader()
+                .getResourceAsStream("github/merge_error_protection_review.json"), StandardCharsets.UTF_8);
+        JsonObject errorJson = WebServiceCommon.deserializeJson(error, JsonObject.class);
+        doThrow(new RestServiceException("Downstream service error: 409", 409, errorJson))
+                .when(github).merge(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
+
+        when(github.getOpenedPullRequests(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(Collections.emptyList());
+
+        String request = IoUtils.readInputStreamToString(getClass().getClassLoader()
+                .getResourceAsStream("hook/new_branch.json"), StandardCharsets.UTF_8);
+        webhook.processPush(WebServiceCommon.deserializeJson(request, EventPush.class));
+
+        verify(mergeValidate).validate(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
+                eq("merge-validate-develop"), eq("develop"));
+        verify(github).merge(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
+                eq("merge-validate-develop"), eq("develop"),
+                eq("Merge merge-validate-develop to develop"));
+
+        verify(github).getOpenedPullRequests(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
+                eq("merge-validate-develop"));
+
+        verify(github).createPullRequest(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
+                eq("merge-validate-develop"), eq("develop"),
+                eq("Merge merge-validate-develop to develop"), nullable(String.class));
     }
 
     @Test

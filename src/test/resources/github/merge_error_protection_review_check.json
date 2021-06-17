@@ -1,0 +1,1 @@
+{"message":"protected branch 'develop' check failed:\n Required status check \"build\" is queued. At least 1 approving review is required by reviewers with write access.","documentation_url":"https://docs.github.com/rest/reference/repos#merge-a-branch"}
