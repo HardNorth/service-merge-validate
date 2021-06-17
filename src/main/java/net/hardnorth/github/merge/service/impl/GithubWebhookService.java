@@ -159,8 +159,8 @@ public class GithubWebhookService implements GithubWebhook {
             if (e.getCode() != 409) {
                 throw e;
             }
-            protectionMessage = ofNullable(e.getBody()).map(b->b.get("message")).map(JsonElement::getAsString)
-                    .orElse("");
+            protectionMessage = ofNullable(e.getBody()).map(b -> b.get("message")).map(JsonElement::getAsString)
+                    .orElseThrow(() -> e);
         }
 
         Matcher reviewMatcher = (REQUIRE_REVIEW_PATTERN.matcher(protectionMessage));
