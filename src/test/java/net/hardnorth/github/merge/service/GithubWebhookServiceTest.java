@@ -3,8 +3,10 @@ package net.hardnorth.github.merge.service;
 import com.google.cloud.datastore.*;
 import com.google.gson.JsonObject;
 import net.hardnorth.github.merge.exception.RestServiceException;
+import net.hardnorth.github.merge.model.github.hook.EventPullRequest;
 import net.hardnorth.github.merge.model.github.hook.EventPush;
 import net.hardnorth.github.merge.model.github.repo.BranchProtection;
+import net.hardnorth.github.merge.model.github.repo.PullRequest;
 import net.hardnorth.github.merge.service.impl.GithubWebhookService;
 import net.hardnorth.github.merge.utils.IoUtils;
 import net.hardnorth.github.merge.utils.WebClientCommon;
@@ -49,60 +51,31 @@ public class GithubWebhookServiceTest {
         when(github
                 .createPullRequest(anyString(), anyString(),anyString(),anyString(),anyString(), anyString(), nullable(String.class)))
                 .thenAnswer(a -> new Random().nextInt(1000000));
+        when(github.getPullRequest(anyString(), anyString(), anyString(), anyInt())).thenReturn(new PullRequest());
     }
 
     @Test
     public void test_merge_path() {
         String request = IoUtils.readInputStreamToString(getClass().getClassLoader()
-                .getResourceAsStream("hook/new_branch.json"), StandardCharsets.UTF_8);
-        webhook.processPush(WebServiceCommon.deserializeJson(request, EventPush.class));
+                .getResourceAsStream("hook/pr_labeled.json"), StandardCharsets.UTF_8);
+        webhook.processPull(WebServiceCommon.deserializeJson(request, EventPullRequest.class));
 
         verify(mergeValidate).validate(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
                 eq("merge-validate-develop"), eq("develop"));
-        verify(github).merge(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
-                eq("merge-validate-develop"), eq("develop"),
-                eq("Merge merge-validate-develop to develop"));
-    }
-
-    @Test
-    public void test_merge_error_review_protection() {
-        String error = IoUtils.readInputStreamToString(getClass().getClassLoader()
-                .getResourceAsStream("github/merge_error_protection_review.json"), StandardCharsets.UTF_8);
-        JsonObject errorJson = WebServiceCommon.deserializeJson(error, JsonObject.class);
-        doThrow(new RestServiceException("Downstream service error: 409", 409, errorJson))
-                .when(github).merge(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
-
-        when(github.getOpenedPullRequests(anyString(), anyString(), anyString(), anyString()))
-                .thenReturn(Collections.emptyList());
-
-        String request = IoUtils.readInputStreamToString(getClass().getClassLoader()
-                .getResourceAsStream("hook/new_branch.json"), StandardCharsets.UTF_8);
-        webhook.processPush(WebServiceCommon.deserializeJson(request, EventPush.class));
-
-        verify(mergeValidate).validate(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
-                eq("merge-validate-develop"), eq("develop"));
-        verify(github).merge(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
-                eq("merge-validate-develop"), eq("develop"),
-                eq("Merge merge-validate-develop to develop"));
-
-        verify(github).getOpenedPullRequests(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
-                eq("merge-validate-develop"));
-
-        verify(github).createPullRequest(anyString(), eq("HardNorth"), eq("agent-java-testNG"),
-                eq("merge-validate-develop"), eq("develop"),
-                eq("Merge merge-validate-develop to develop"), nullable(String.class));
+        verify(github).createReview(anyString(), eq("HardNorth"),
+                eq("agent-java-testNG"), anyInt(), eq("APPROVE"), nullable(String.class));
     }
 
     @Test
     public void test_datastore_cache() {
         String requestStr = IoUtils.readInputStreamToString(getClass().getClassLoader()
-                .getResourceAsStream("hook/new_branch.json"), StandardCharsets.UTF_8);
-        EventPush request = WebServiceCommon.deserializeJson(requestStr, EventPush.class);
+                .getResourceAsStream("hook/pr_labeled.json"), StandardCharsets.UTF_8);
+        EventPullRequest request = WebServiceCommon.deserializeJson(requestStr, EventPullRequest.class);
         long installationId = new Random().nextLong();
         request.getInstallation().setId(installationId);
 
         // Perform first call and ensure token was saved to cache
-        webhook.processPush(request);
+        webhook.processPull(request);
 
         EntityQuery query = Query
                 .newEntityQueryBuilder()
@@ -120,7 +93,7 @@ public class GithubWebhookServiceTest {
         String token = allTokens.get(0).getString(TOKEN);
 
         // Perform second call and ensure token was taken for cache
-        webhook.processPush(request);
+        webhook.processPull(request);
 
         tokenResult = datastore.run(query);
         allTokens = StreamSupport.stream(
@@ -136,8 +109,7 @@ public class GithubWebhookServiceTest {
         // Verify two merges performed
         verify(mergeValidate, times(2)).validate(endsWith(token), eq("HardNorth"),
                 eq("agent-java-testNG"), eq("merge-validate-develop"), eq("develop"));
-        verify(github, times(2)).merge(anyString(), eq("HardNorth"),
-                eq("agent-java-testNG"), eq("merge-validate-develop"), eq("develop"),
-                eq("Merge merge-validate-develop to develop"));
+        verify(github, times(2)).createReview(endsWith(token), eq("HardNorth"),
+                eq("agent-java-testNG"), anyInt(), eq("APPROVE"), nullable(String.class));
     }
 }

@@ -313,4 +313,14 @@ public class GithubService implements Github {
                 }.getType()))
                 .orElseThrow(() -> INVALID_API_RESPONSE);
     }
+
+    @Override
+    public PullRequest getPullRequest(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
+                                      int pullNumber) {
+        Response<JsonObject> response =
+                executeServiceCall(apiClient.getPullRequest(authHeader, owner, repo, pullNumber), charset);
+        return ofNullable(response.body())
+                .map(b -> WebServiceCommon.deserializeJson(b, PullRequest.class))
+                .orElseThrow(() -> INVALID_API_RESPONSE);
+    }
 }

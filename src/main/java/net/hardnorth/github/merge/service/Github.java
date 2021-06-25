@@ -46,4 +46,7 @@ public interface Github {
 
     List<PullRequest> getOpenedPullRequests(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
                                             @Nullable String branch);
+
+    PullRequest getPullRequest(@Nullable String authHeader, @Nullable String owner, @Nullable String repo,
+                               int pullNumber);
 }

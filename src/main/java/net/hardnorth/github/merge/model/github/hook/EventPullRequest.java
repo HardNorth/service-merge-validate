@@ -1,13 +1,20 @@
 package net.hardnorth.github.merge.model.github.hook;
 
+import com.google.gson.annotations.SerializedName;
+
 public class EventPullRequest {
     private String action;
 
-    private String number;
+    private Integer number;
+
+    @SerializedName("pull_request")
+    private PullRequest pullRequest;
 
     private Installation installation;
 
     private Repository repository;
+
+    private Label label;
 
     public String getAction() {
         return action;
@@ -17,11 +24,11 @@ public class EventPullRequest {
         this.action = action;
     }
 
-    public String getNumber() {
+    public Integer getNumber() {
         return number;
     }
 
-    public void setNumber(String number) {
+    public void setNumber(Integer number) {
         this.number = number;
     }
 
@@ -39,5 +46,21 @@ public class EventPullRequest {
 
     public void setRepository(Repository repository) {
         this.repository = repository;
+    }
+
+    public Label getLabel() {
+        return label;
+    }
+
+    public void setLabel(Label label) {
+        this.label = label;
+    }
+
+    public PullRequest getPullRequest() {
+        return pullRequest;
+    }
+
+    public void setPullRequest(PullRequest pullRequest) {
+        this.pullRequest = pullRequest;
     }
 }
